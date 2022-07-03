@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- My Code -->
+    <link rel="stylesheet" href="style.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<title>Kusama Network Proxy Visualizer</title>
+</head>
+<body>
+
+    <header>
+        <div class="Nav">
+            Home           
+        </div>
+        <div class="Nav">
+            Option 2           
+        </div>
+        <div class="Nav">
+            Option 3           
+        </div>
+        <div class="Nav">
+            Option 4            
+        </div>
+        
+    </header>
+
+    <div class="MainRow">
+
+    <aside>
+        <p>SideBar</p>
+    </aside>
+
+    <section>
+
+        <canvas id="viewport"></canvas>
+
+    </section>
+    </div>
+
+    <footer>
+        <p>Footer</p>
+    </footer>
+
+    <!-- particle system of arbour. Must include arbor.js file -->
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="lib/arbor.js"></script>  
+
+    <!-- to let arbor handle realtime color and value tweens.this will add a pair of new tweening methods to the ParticleSystem object. Must include arbor-tween.js file -->
+        <!-- Tweening is the easisit way to create animated objects. Tweening is the process of generating in between frames
+        i.e. developing frames between two images to create a appearance in which first image generate its replica into the second image. -->
+    <script src="lib/arbor-tween.js"></script>
+
+    <!-- My Code -->
+    <script src="app.js"></script> 
+</body>
+</html>
+
+
+<!-- create a Graph Theory type style for the proxies ->
