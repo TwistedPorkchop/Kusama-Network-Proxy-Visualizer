@@ -1,12 +1,12 @@
 body {
 	margin: 0px;
     padding: 0px;
-    background-image: radial-gradient(rgb(40, 36, 36), black);
+    background-image: linear-gradient(black, #110042, black);
     overflow-x: hidden;
     color: white;
 }
 header{
-	background-image: linear-gradient(to bottom, rgb(89, 25, 55), black);
+	background-image: linear-gradient(to bottom, #110042, black);
     width: 100vw;
     height: 50px;
 	border: 0px;
@@ -18,7 +18,7 @@ header{
     align-items: center
 }
 footer{
-	background-image: linear-gradient(to bottom, black,rgb(89, 25, 55));
+	background-image: linear-gradient(to bottom, black,#110042);
 	position: fixed;
 	width: 100vw;
 	border: 0px;
@@ -30,8 +30,8 @@ footer{
 }
 
 aside{
-    background-color: rgb(57, 8, 130, 0.5);
-    box-shadow: 0 0 10px rgba(57, 8, 130, 0.713);
+    background-color: #c831ff8f;
+    box-shadow: 0 0 15px #110042;
     width: 8vw;
     height: 80vh;
     border: 15px;
@@ -44,13 +44,13 @@ aside{
 aside:hover{
     /*un trasparent on hover*/
     /*rounded button */
-    box-shadow: 0 0 15px rgb(100, 15, 228);
+    box-shadow: 0 0 20px #1e0079;
     transition: 1s;
 
 }
 
 section{
-    background-color: rgb(89, 25, 55);
+    background-color: rgba(0, 0, 0, 0);
     width: max-content;
     border: 5px;
 	padding: 5px;
@@ -71,12 +71,16 @@ div{
     padding: 10px;
     width: max-content;
     height: min-content;
-    box-shadow: 0 0 10px rgb(118, 1, 52);
+    box-shadow: 0 0 10px #c831ff91;
     transition: 1s;
 }
 .Nav:hover{
-    box-shadow: 0 0 10px rgb(181, 34, 98);
+    box-shadow: 0 0 15px #c831ff;
     transition: 1s;
+}
+.Nav:active{
+    box-shadow: 0 0 15px rgb(246, 246, 246);
+    transition: 0.1s;
 }
 
 .MainRow{

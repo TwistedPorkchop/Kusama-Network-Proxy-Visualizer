@@ -1,16 +1,13 @@
+// Import
+//const { ApiPromise, WsProvider } = require('@polkadot/api');
 
-/*function start() {
-  var data = {
-  nodes:{
-  User:{'color':'red','shape':'dot','label':'User'},
-  Worker:{'color':'green','shape':'dot','label':'Worker'},
-  Client:{'color':'blue','shape':'dot','label':'Client'}
-  },
-  edges:{
-  User:{ Worker:{}, Client:{} }}
-  };
-  sys.graft(data);
-}*/
+// Import
+import { ApiPromise, WsProvider } from './node_module/@polkadot/api';
+
+// Construct
+const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
+const api = await ApiPromise.create({ provider: wsProvider });
+
 
 
 (function($){
@@ -49,7 +46,7 @@
         // which allow you to step through the actual node objects but also pass an
         // x,y point in the screen's coordinate system
         // 
-        ctx.fillStyle = "purple"
+        ctx.fillStyle = "white"
         ctx.fillRect(0,0, canvas.width, canvas.height)
         
         particleSystem.eachEdge(function(edge, pt1, pt2){
@@ -72,7 +69,7 @@
 
           // draw a rectangle centered at pt
           var w = 10
-          ctx.fillStyle = (node.data.alone) ? "red" : "white"
+          ctx.fillStyle = (node.data.alone) ? "red" : "blue"
           ctx.fillRect(pt.x-w/2, pt.y-w/2, w,w)
         })    			
       },
@@ -138,13 +135,13 @@
 
     sys.renderer = Renderer("#viewport") ;
 
-    // add some nodes to the graph and watch it go...
+    /* add some nodes to the graph and watch it go...
     sys.addEdge('a','b')
     sys.addEdge('a','c')
     sys.addEdge('a','d')
     sys.addEdge('a','e')
     sys.addNode('f', {alone:true, mass:.25})
-
+*/
     // or, equivalently:
     //
     // sys.graft({
@@ -163,3 +160,17 @@
   })
 
 })(this.jQuery)
+
+async function draw() {
+  
+  // Do all of this in a subscription
+
+  nodes = await api.query.proxy.proxies.entries()
+  proxy_actions = await api.query.proxy.announcements.entries()
+  for(node in nodes){
+    node_point = nodes[node][0].toHuman() //nodes in graph
+    edges = nodes[node][1] //node edges/graph connections
+    
+    console.log(node_point)
+  }
+}

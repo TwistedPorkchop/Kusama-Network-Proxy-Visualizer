@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "jquery": "^3.6.0"
+    "@polkadot/api": "^8.11.2",
+    "jquery": "^3.6.0",
+    "yarn": "^1.22.19"
   }
 }
