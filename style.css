@@ -1,3 +1,6 @@
+html *{
+    font-family: sans-serif;
+}
 body {
 	margin: 0px;
     padding: 0px;
@@ -66,7 +69,7 @@ div{
 }
 
 .Nav{
-    background-image: radial-gradient( rgb(89, 25, 55), black);
+    background-color: #c831ff8f;
     border: 5px;
     padding: 10px;
     width: max-content;

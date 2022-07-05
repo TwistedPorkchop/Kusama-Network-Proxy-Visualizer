@@ -1,5 +1,5 @@
-// Import
-//const { ApiPromise, WsProvider } = require('@polkadot/api');
+//Requirements
+
 
 // Import
 import { ApiPromise, WsProvider } from './node_module/@polkadot/api';
