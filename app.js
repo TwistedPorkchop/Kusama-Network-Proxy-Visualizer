@@ -1,13 +1,8 @@
 //Requirements
 
-
-// Import
-import { ApiPromise, WsProvider } from './node_module/@polkadot/api';
-
 // Construct
 const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
 const api = await ApiPromise.create({ provider: wsProvider });
-
 
 
 (function($){
