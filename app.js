@@ -1,4 +1,5 @@
-//Requirements
+//Imports
+import { ApiPromise, WsProvider } from '@polkadot/api';
 
 // Construct
 const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
