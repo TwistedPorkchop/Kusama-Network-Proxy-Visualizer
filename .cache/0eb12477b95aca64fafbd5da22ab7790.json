@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"\"use strict\";\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.crypto = void 0;\nexports.crypto = {\n    node: undefined,\n    web: typeof self === 'object' && 'crypto' in self ? self.crypto : undefined,\n};\n"},"hash":"fce7450ccb5d2f6d0611307c94af5b46"}

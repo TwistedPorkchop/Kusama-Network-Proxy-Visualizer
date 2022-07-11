@@ -1,0 +1,1 @@
+{"dependencies":[{"name":"./jsonrpc.js","loc":{"line":3,"column":7}}],"generated":{"js":"\"use strict\";\n\nrequire(\"./jsonrpc.js\");"},"hash":"014507aa1e94f4ff6899bbf2d779a22e"}

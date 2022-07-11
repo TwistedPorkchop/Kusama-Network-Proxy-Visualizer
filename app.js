@@ -1,11 +1,7 @@
 //Imports
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
-// Construct
-const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
-const api = await ApiPromise.create({ provider: wsProvider });
-
-
+//arbor
 (function($){
 
   var Renderer = function(canvas){
@@ -158,7 +154,10 @@ const api = await ApiPromise.create({ provider: wsProvider });
 })(this.jQuery)
 
 async function draw() {
-  
+  // Construct
+  const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
+  const api = await ApiPromise.create({ provider: wsProvider });
+
   // Do all of this in a subscription
 
   nodes = await api.query.proxy.proxies.entries()

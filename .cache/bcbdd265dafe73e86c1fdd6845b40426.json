@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"\"use strict\";\n\nObject.defineProperty(exports, \"__esModule\", {\n  value: true\n});\nexports.toRxMethod = toRxMethod;\n// Copyright 2017-2022 @polkadot/api authors & contributors\n// SPDX-License-Identifier: Apache-2.0\nfunction toRxMethod(method) {\n  return method;\n}"},"hash":"d29d3a4c13ff46a141712fff412117a7"}

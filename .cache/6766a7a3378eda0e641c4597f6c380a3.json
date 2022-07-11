@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"\"use strict\";\n\nObject.defineProperty(exports, \"__esModule\", {\n  value: true\n});\nexports.identity = identity;\nfunction identity(x) {\n  return x;\n}\n//# sourceMappingURL=identity.js.map"},"hash":"bab26456cdccf72aa8cebc57c593e9d6"}

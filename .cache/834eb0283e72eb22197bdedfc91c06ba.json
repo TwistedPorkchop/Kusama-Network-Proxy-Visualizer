@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"\"use strict\";\n\nObject.defineProperty(exports, \"__esModule\", {\n  value: true\n});\nvar observable = exports.observable = function () {\n  return typeof Symbol === 'function' && Symbol.observable || '@@observable';\n}();\n//# sourceMappingURL=observable.js.map"},"hash":"056a7e8dc7a4100e6ae397cfe7ff1037"}

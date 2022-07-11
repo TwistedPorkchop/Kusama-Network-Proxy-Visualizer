@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"\"use strict\";\n\nObject.defineProperty(exports, \"__esModule\", {\n  value: true\n});\nexports.isFunction = isFunction;\nfunction isFunction(value) {\n  return typeof value === 'function';\n}\n//# sourceMappingURL=isFunction.js.map"},"hash":"83e5daeeaff6644b73b13241843d8767"}

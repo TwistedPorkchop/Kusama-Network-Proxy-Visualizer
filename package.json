@@ -17,6 +17,8 @@
     "lib": "lib"
   },
   "scripts": {
+    "dev": "parcel homepage.html",
+    "build": "parcel build homepage.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"\"use strict\";\n\nObject.defineProperty(exports, \"__esModule\", {\n  value: true\n});\nexports.isValidDate = isValidDate;\nfunction isValidDate(value) {\n  return value instanceof Date && !isNaN(value);\n}\n//# sourceMappingURL=isDate.js.map"},"hash":"c5b955ec5688f3c916a8e17f3e3d5ab4"}

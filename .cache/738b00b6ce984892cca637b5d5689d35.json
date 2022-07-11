@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"\"use strict\";\n\nObject.defineProperty(exports, \"__esModule\", {\n  value: true\n});\n// Copyright 2017-2022 @polkadot/util-crypto authors & contributors\n// SPDX-License-Identifier: Apache-2.0\nconst DEFAULT_PARAMS = exports.DEFAULT_PARAMS = {\n  N: 1 << 15,\n  p: 1,\n  r: 8\n};"},"hash":"568a39c467245b0e090591ca7131ff02"}

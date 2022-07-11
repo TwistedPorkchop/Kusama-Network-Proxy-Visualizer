@@ -68,41 +68,39 @@ require = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({9:[function(require,module,exports) {
-//Requirements
+})({3:[function(require,module,exports) {
+"use strict";
 
-// Construct
-const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
-const api = await ApiPromise.create({ provider: wsProvider });
+var _api = require("@polkadot/api");
 
+//arbor
+(function ($) {
 
-(function($){
-
-  var Renderer = function(canvas){
-    var canvas = $(canvas).get(0)
+  var Renderer = function (canvas) {
+    var canvas = $(canvas).get(0);
     var ctx = canvas.getContext("2d");
-    var particleSystem
+    var particleSystem;
 
     var that = {
-      init:function(system){
+      init: function (system) {
         // the particle system will call the init function once, right before the
         // first frame is to be drawn. it's a good place to set up the canvas and
         // to pass the canvas size to the particle system
         //
         // save a reference to the particle system for use in the .redraw() loop
-        particleSystem = system
+        particleSystem = system;
 
         // inform the system of the screen dimensions so it can map coords for us.
         // if the canvas is ever resized, screenSize should be called again with
         // the new dimensions
-        particleSystem.screenSize(canvas.width, canvas.height) 
-        particleSystem.screenPadding(80) // leave an extra 80px of whitespace per side
-        
+        particleSystem.screenSize(canvas.width, canvas.height);
+        particleSystem.screenPadding(80); // leave an extra 80px of whitespace per side
+
         // set up some event handlers to allow for node-dragging
-        that.initMouseHandling()
+        that.initMouseHandling();
       },
-      
-      redraw:function(){
+
+      redraw: function () {
         // 
         // redraw will be called repeatedly during the run whenever the node positions
         // change. the new positions for the nodes can be accessed by looking at the
@@ -112,94 +110,92 @@ const api = await ApiPromise.create({ provider: wsProvider });
         // which allow you to step through the actual node objects but also pass an
         // x,y point in the screen's coordinate system
         // 
-        ctx.fillStyle = "white"
-        ctx.fillRect(0,0, canvas.width, canvas.height)
-        
-        particleSystem.eachEdge(function(edge, pt1, pt2){
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        particleSystem.eachEdge(function (edge, pt1, pt2) {
           // edge: {source:Node, target:Node, length:#, data:{}}
           // pt1:  {x:#, y:#}  source position in screen coords
           // pt2:  {x:#, y:#}  target position in screen coords
 
           // draw a line from pt1 to pt2
-          ctx.strokeStyle = "rgba(0,0,0, .333)"
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.moveTo(pt1.x, pt1.y)
-          ctx.lineTo(pt2.x, pt2.y)
-          ctx.stroke()
-        })
+          ctx.strokeStyle = "rgba(0,0,0, .333)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(pt1.x, pt1.y);
+          ctx.lineTo(pt2.x, pt2.y);
+          ctx.stroke();
+        });
 
-        particleSystem.eachNode(function(node, pt){
+        particleSystem.eachNode(function (node, pt) {
           // node: {mass:#, p:{x,y}, name:"", data:{}}
           // pt:   {x:#, y:#}  node position in screen coords
 
           // draw a rectangle centered at pt
-          var w = 10
-          ctx.fillStyle = (node.data.alone) ? "red" : "blue"
-          ctx.fillRect(pt.x-w/2, pt.y-w/2, w,w)
-        })    			
+          var w = 10;
+          ctx.fillStyle = node.data.alone ? "red" : "blue";
+          ctx.fillRect(pt.x - w / 2, pt.y - w / 2, w, w);
+        });
       },
-      
-      initMouseHandling:function(){
+
+      initMouseHandling: function () {
         // no-nonsense drag and drop (thanks springy.js)
         var dragged = null;
 
         // set up a handler object that will initially listen for mousedowns then
         // for moves and mouseups while dragging
         var handler = {
-          clicked:function(e){
+          clicked: function (e) {
             var pos = $(canvas).offset();
-            _mouseP = arbor.Point(e.pageX-pos.left, e.pageY-pos.top)
+            _mouseP = arbor.Point(e.pageX - pos.left, e.pageY - pos.top);
             dragged = particleSystem.nearest(_mouseP);
 
-            if (dragged && dragged.node !== null){
+            if (dragged && dragged.node !== null) {
               // while we're dragging, don't let physics move the node
-              dragged.node.fixed = true
+              dragged.node.fixed = true;
             }
 
-            $(canvas).bind('mousemove', handler.dragged)
-            $(window).bind('mouseup', handler.dropped)
+            $(canvas).bind('mousemove', handler.dragged);
+            $(window).bind('mouseup', handler.dropped);
 
-            return false
+            return false;
           },
-          dragged:function(e){
+          dragged: function (e) {
             var pos = $(canvas).offset();
-            var s = arbor.Point(e.pageX-pos.left, e.pageY-pos.top)
+            var s = arbor.Point(e.pageX - pos.left, e.pageY - pos.top);
 
-            if (dragged && dragged.node !== null){
-              var p = particleSystem.fromScreen(s)
-              dragged.node.p = p
+            if (dragged && dragged.node !== null) {
+              var p = particleSystem.fromScreen(s);
+              dragged.node.p = p;
             }
 
-            return false
+            return false;
           },
 
-          dropped:function(e){
-            if (dragged===null || dragged.node===undefined) return
-            if (dragged.node !== null) dragged.node.fixed = false
-            dragged.node.tempMass = 1000
-            dragged = null
-            $(canvas).unbind('mousemove', handler.dragged)
-            $(window).unbind('mouseup', handler.dropped)
-            _mouseP = null
-            return false
+          dropped: function (e) {
+            if (dragged === null || dragged.node === undefined) return;
+            if (dragged.node !== null) dragged.node.fixed = false;
+            dragged.node.tempMass = 1000;
+            dragged = null;
+            $(canvas).unbind('mousemove', handler.dragged);
+            $(window).unbind('mouseup', handler.dropped);
+            _mouseP = null;
+            return false;
           }
-        }
-        
-        // start listening
-        $(canvas).mousedown(handler.clicked);
 
-      },
-      
-    }
-    return that
-  }    
+          // start listening
+        };$(canvas).mousedown(handler.clicked);
+      }
 
-  $(document).ready(function(){
+    };
+    return that;
+  };
+
+  $(document).ready(function () {
     //arbor.ParticleSystem(repulsion, stiffness, friction, gravity, fps, dt, precision)
     var sys = arbor.ParticleSystem(1000, 600, 0.5, true, 55, 0.02, 0.6);
 
-    sys.renderer = Renderer("#viewport") ;
+    sys.renderer = Renderer("#viewport");
 
     /* add some nodes to the graph and watch it go...
     sys.addEdge('a','b')
@@ -207,7 +203,7 @@ const api = await ApiPromise.create({ provider: wsProvider });
     sys.addEdge('a','d')
     sys.addEdge('a','e')
     sys.addNode('f', {alone:true, mass:.25})
-*/
+    */
     // or, equivalently:
     //
     // sys.graft({
@@ -222,22 +218,24 @@ const api = await ApiPromise.create({ provider: wsProvider });
     //     }
     //   }
     // })
-    
-  })
+  });
+})(undefined.jQuery); //Imports
 
-})(this.jQuery)
 
 async function draw() {
-  
+  // Construct
+  const wsProvider = new _api.WsProvider('wss://kusama-rpc.polkadot.io');
+  const api = await _api.ApiPromise.create({ provider: wsProvider });
+
   // Do all of this in a subscription
 
-  nodes = await api.query.proxy.proxies.entries()
-  proxy_actions = await api.query.proxy.announcements.entries()
-  for(node in nodes){
-    node_point = nodes[node][0].toHuman() //nodes in graph
-    edges = nodes[node][1] //node edges/graph connections
-    
-    console.log(node_point)
+  nodes = await api.query.proxy.proxies.entries();
+  proxy_actions = await api.query.proxy.announcements.entries();
+  for (node in nodes) {
+    node_point = nodes[node][0].toHuman(); //nodes in graph
+    edges = nodes[node][1]; //node edges/graph connections
+
+    console.log(node_point);
   }
 }
 },{}],0:[function(require,module,exports) {
@@ -258,7 +256,7 @@ function Module() {
 module.bundle.Module = Module;
 
 if (!module.bundle.parent && typeof WebSocket !== 'undefined') {
-  var ws = new WebSocket('ws://localhost:58207/');
+  var ws = new WebSocket('ws://localhost:54160/');
   ws.onmessage = function(event) {
     var data = JSON.parse(event.data);
 
@@ -359,4 +357,4 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.require, id)
   });
 }
-},{}]},{},[0,9])
+},{}]},{},[0,3])
