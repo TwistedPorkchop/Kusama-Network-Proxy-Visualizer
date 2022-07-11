@@ -1,4 +1,5 @@
 //Imports
+import "babel-polyfill";
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
 //arbor
