@@ -2,6 +2,7 @@
   "dependencies": {
     "@polkadot/api": "^8.11.2",
     "babel-polyfill": "^6.26.0",
+    "cytoscape": "^3.22.1",
     "jquery": "^3.6.0",
     "lib": "^4.3.3",
     "yarn": "^1.22.19"
