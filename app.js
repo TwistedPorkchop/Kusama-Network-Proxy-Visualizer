@@ -1,6 +1,11 @@
 //Imports
 import "babel-polyfill";
+import "jQuery";
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import '/lib/arbor.js';
+import '/lib/arbor-tween.js';
+import '/lib/graphics.js';
+import '/lib/renderer.js';
 
 //arbor
 (function($){
