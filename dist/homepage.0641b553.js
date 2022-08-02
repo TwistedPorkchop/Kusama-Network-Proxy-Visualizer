@@ -4641,9 +4641,9 @@ parcelHelpers.export(exports, "hasWasm", ()=>hasWasm);
 // Copyright 2017-2022 @polkadot/util authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 var _xBigint = require("@polkadot/x-bigint"); // Since we run in very different environments, we have to ensure we have all
+var __dirname = "node_modules/@polkadot/util";
 var process = require("process");
 var Buffer = require("buffer").Buffer;
-var __dirname = "node_modules/@polkadot/util";
 const hasBigInt = typeof (0, _xBigint.BigInt) === "function" && typeof (0, _xBigint.BigInt).asIntN === "function";
 const hasBuffer = typeof Buffer !== "undefined";
 const hasCjs = true;

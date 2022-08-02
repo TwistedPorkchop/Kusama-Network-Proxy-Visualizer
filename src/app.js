@@ -114,7 +114,8 @@ async function draw() {
     //Adding node points    
     cy.add([
       { group: "nodes",
-        data: { id: await checkID(node_point) },
+        data: { id: await checkID(node_point)
+        },
         position: { x: 0, y: 0 }
       },
     ]);
@@ -128,7 +129,7 @@ async function draw() {
         },
       ]);
     }
-
+  
     //Adding edges
     var i = 0;
     for(proxy of edges){
@@ -141,7 +142,7 @@ async function draw() {
       ]);
       i++;
     }
-
+    
   });//end promise
   addNodePromises.append(addNodePromise);  
     
