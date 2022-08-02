@@ -1,8 +1,36 @@
 {
   "dependencies": {
     "@polkadot/api": "^8.11.2",
-    "browserify": "^17.0.0",
+    "@polkadot/util": "^10.1.1",
+    "cytoscape": "^3.22.1",
+    "cytoscape-cola": "^2.5.1",
     "jquery": "^3.6.0",
-    "yarn": "^1.22.19"
+    "lib": "^4.3.3"
+  },
+  "name": "kusama-network-proxy-visualizer",
+  "description": "",
+  "version": "1.0.0",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "parcel watch ./src/homepage.html",
+    "dev": "parcel ./src/homepage.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TwistedPorkchop/Kusama-Network-Proxy-Visualizer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TwistedPorkchop/Kusama-Network-Proxy-Visualizer/issues"
+  },
+  "homepage": "https://github.com/TwistedPorkchop/Kusama-Network-Proxy-Visualizer#readme",
+  "devDependencies": {
+    "buffer": "^6.0.3",
+    "os-browserify": "^0.3.0",
+    "parcel": "^2.6.2",
+    "process": "^0.11.10"
   }
 }
