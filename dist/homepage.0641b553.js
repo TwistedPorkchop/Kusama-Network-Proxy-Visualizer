@@ -613,10 +613,11 @@ async function draw() {
     nodes = await api.query.proxy.proxies.entries();
     proxy_actions = await api.query.proxy.announcements.entries();
     addNodePromises = [];
+    var i = 0;
     for(node in nodes){
-        addNodePromise = new Promise(()=>{
-            node_point = nodes[node][0].toHuman()[0]; //nodes in graph
-            edges = nodes[node][1][0].toHuman(); //node edges/graph connections
+        nodePromise = async ()=>{
+            const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
+            const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
             //Adding node points    
             cy.add([
                 {
@@ -644,24 +645,21 @@ async function draw() {
                 }, 
             ]);
             //Adding edges
-            var i = 0;
-            for (proxy of edges){
-                cy.add([
-                    {
-                        group: "edges",
-                        data: {
-                            id: proxy.proxyType + i + "\n",
-                            source: await checkID(node_point),
-                            target: await checkID(proxy.delegate)
-                        }
-                    }, 
-                ]);
-                i++;
-            }
-        }); //end promise
-        addNodePromises.append(addNodePromise);
+            for (proxy of edges)//console.log(i);
+            cy.add([
+                {
+                    group: "edges",
+                    data: {
+                        id: proxy.proxyType + i++ + "\n",
+                        source: await checkID(node_point),
+                        target: await checkID(proxy.delegate)
+                    }
+                }, 
+            ]);
+        }; //end promise
+        addNodePromises.push(nodePromise());
     } //end for loop
-    await Promises.all(addNodePromises);
+    await Promise.all(addNodePromises);
     lay();
 }
 //Layout option "cola", thanks maxkfranz. https://github.com/cytoscape/cytoscape.js-cola
@@ -4641,9 +4639,9 @@ parcelHelpers.export(exports, "hasWasm", ()=>hasWasm);
 // Copyright 2017-2022 @polkadot/util authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 var _xBigint = require("@polkadot/x-bigint"); // Since we run in very different environments, we have to ensure we have all
-var __dirname = "node_modules/@polkadot/util";
-var process = require("process");
 var Buffer = require("buffer").Buffer;
+var process = require("process");
+var __dirname = "node_modules/@polkadot/util";
 const hasBigInt = typeof (0, _xBigint.BigInt) === "function" && typeof (0, _xBigint.BigInt).asIntN === "function";
 const hasBuffer = typeof Buffer !== "undefined";
 const hasCjs = true;
@@ -75650,8 +75648,8 @@ BRp$c.findTaxiPoints = function(edge, pairInfo) {
     var pl = isVert ? pdy : pdx;
     var sgnL = signum(pl);
     var forcedDir = false;
-    if (!(isExplicitDir && (turnIsPercent || turnIsNegative) // forcing in this case would cause weird growing in the opposite direction
-    ) && (rawTaxiDir === DOWNWARD && pl < 0 || rawTaxiDir === UPWARD && pl > 0 || rawTaxiDir === LEFTWARD && pl > 0 || rawTaxiDir === RIGHTWARD && pl < 0)) {
+    if (!(isExplicitDir && (turnIsPercent || turnIsNegative // forcing in this case would cause weird growing in the opposite direction
+    )) && (rawTaxiDir === DOWNWARD && pl < 0 || rawTaxiDir === UPWARD && pl > 0 || rawTaxiDir === LEFTWARD && pl > 0 || rawTaxiDir === RIGHTWARD && pl < 0)) {
         sgnL *= -1;
         l = sgnL * Math.abs(l);
         forcedDir = true;

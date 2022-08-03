@@ -104,50 +104,59 @@ async function draw() {
   proxy_actions = await api.query.proxy.announcements.entries();
 
   addNodePromises = [];
-  for(node in nodes){
+  var i = 0;
+  for (node in nodes) {
 
-    addNodePromise = new Promise(() => {
+      nodePromise = async() => {
 
-    node_point = nodes[node][0].toHuman()[0]; //nodes in graph
-    edges = nodes[node][1][0].toHuman(); //node edges/graph connections
+          const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
+          const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
 
-    //Adding node points    
-    cy.add([
-      { group: "nodes",
-        data: { id: await checkID(node_point)
-        },
-        position: { x: 0, y: 0 }
-      },
-    ]);
+          //Adding node points    
+          cy.add([{
+              group: "nodes",
+              data: {
+                  id: await checkID(node_point)
+              },
+              position: {
+                  x: 0,
+                  y: 0
+              }
+          }, ]);
 
-    //And here the deleates
-    for(proxy of edges){
-      cy.add([
-        { group: "nodes",
-          data: { id: await checkID(proxy.delegate) },
-          position: { x: 0, y: 0}
-        },
-      ]);
-    }
-  
-    //Adding edges
-    var i = 0;
-    for(proxy of edges){
-      cy.add([
-        { group: "edges", 
-          data: { id: proxy.proxyType + i + "\n", 
-          source: await checkID(node_point), 
-          target: await checkID(proxy.delegate) }
-        },
-      ]);
-      i++;
-    }
-    
-  });//end promise
-  addNodePromises.append(addNodePromise);  
-    
-  }//end for loop
-  await Promises.all(addNodePromises);
+          //And here the deleates
+          for (proxy of edges) {
+              cy.add([{
+                  group: "nodes",
+                  data: {
+                      id: await checkID(proxy.delegate)
+                  },
+                  position: {
+                      x: 0,
+                      y: 0
+                  }
+              }, ]);
+          }
+
+          //Adding edges
+          
+          for (proxy of edges) {
+            //console.log(i);
+              cy.add([{
+                  group: "edges",
+                  data: {
+                      id: proxy.proxyType + i++ + "\n",
+                      source: await checkID(node_point),
+                      target: await checkID(proxy.delegate)
+                  }
+              }, ]);
+          }
+
+      }; //end promise
+      addNodePromises.push(nodePromise());
+
+  } //end for loop
+  await Promise.all(addNodePromises);
   lay();
 }
 

@@ -28,7 +28,10 @@
   },
   "homepage": "https://github.com/TwistedPorkchop/Kusama-Network-Proxy-Visualizer#readme",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.32.0",
+    "@typescript-eslint/parser": "^5.32.0",
     "buffer": "^6.0.3",
+    "eslint": "^8.21.0",
     "os-browserify": "^0.3.0",
     "parcel": "^2.6.2",
     "process": "^0.11.10"
