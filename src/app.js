@@ -105,10 +105,10 @@ async function draw() {
 
   addNodePromises = [];
   var i = 0;
-  for (node in nodes) {
+  for (nodevar in nodes) {
 
       nodePromise = async() => {
-
+          const node = nodevar
           const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
           const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
 
@@ -157,6 +157,32 @@ async function draw() {
 
   } //end for loop
   await Promise.all(addNodePromises);
+  for (node in nodes) {
+
+    //nodePromise = async() => {
+
+        const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
+        const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
+
+        //Adding edges
+        
+        for (proxy of edges) {
+          console.log(await checkID(proxy.delegate));
+            cy.add([{
+                group: "edges",
+                data: {
+                    id: proxy.proxyType + i++ + "\n",
+                    source: await checkID(node_point),
+                    target: await checkID(proxy.delegate)
+                }
+            }, ]);
+        }
+
+    //}; //end promise
+    //addNodePromises.push(nodePromise());
+
+} //end for loop
+  
   lay();
 }
 
@@ -165,11 +191,11 @@ function lay() {
   var layout = cy.layout({
     name: 'cola',
     ungrabifyWhileSimulating: true,
-    boundingBox: { x1:0, y1:0, x2:3000, y2:1500 },
+    boundingBox: { x1:0, y1:0, x2:30000, y2:15000 },
     nodeDimensionsIncludeLabels: true,
     randomize: true,
-    edgeLength: 100, // sets edge length directly in simulation
-    nodeSpacing: function( node ){ return 100; },
+    edgeLength: 1000, // sets edge length directly in simulation
+    nodeSpacing: function( node ){ return 1000; },
     maxSimulationTime: 6000,
   });
 
@@ -179,15 +205,15 @@ function lay() {
 };
 
 //Search function that uses searchbar input. Add reset of searchbar? Add choice between search for username or public address.
-function Search() {
+async function Search() {
   const searchTerm = document.getElementById("searchTerm").value;
-
+  const id = await checkID(searchTerm);
   //cy.fit(cy.$('#'+searchTerm));
   cy.zoom({
     level: 0.5,
-    position: cy.$('#'+searchTerm).position()
+    position: cy.$('#'+ id).position()
   });
-  console.log("search Attempt");
+  console.log("search Attempt for " + searchTerm + " Found " + id );
 }
 
 
