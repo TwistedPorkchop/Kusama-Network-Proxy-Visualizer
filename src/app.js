@@ -97,8 +97,7 @@ async function checkID(node_point) {
   })
 }
 
-async function draw() {
-
+async function nodesCreation(){
   api = await apiPromise;
   nodes = await api.query.proxy.proxies.entries();
   proxy_actions = await api.query.proxy.announcements.entries();
@@ -107,7 +106,7 @@ async function draw() {
   var i = 0;
   for (nodevar in nodes) {
 
-      nodePromise = async() => {
+      addNodePromises.push(nodePromise = async() => {
           const node = nodevar
           const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
           const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
@@ -152,14 +151,22 @@ async function draw() {
               }, ]);
           }
 
-      }; //end promise
-      addNodePromises.push(nodePromise());
+      } //end promise
+      );
 
   } //end for loop
   await Promise.all(addNodePromises);
+}
+async function edgeCreation(){
+  api = await apiPromise;
+  nodes = await api.query.proxy.proxies.entries();
+  proxy_actions = await api.query.proxy.announcements.entries();
+
+  addNodePromises = [];
+  var i = 0;
   for (node in nodes) {
 
-    //nodePromise = async() => {
+    addNodePromises.push(nodePromise = async() => {
 
         const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
         const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
@@ -167,7 +174,7 @@ async function draw() {
         //Adding edges
         
         for (proxy of edges) {
-          console.log(await checkID(proxy.delegate));
+          //console.log(await checkID(proxy.delegate));
             cy.add([{
                 group: "edges",
                 data: {
@@ -178,10 +185,16 @@ async function draw() {
             }, ]);
         }
 
-    //}; //end promise
-    //addNodePromises.push(nodePromise());
+    } //end promise
+    );
 
 } //end for loop
+}
+
+async function draw() {
+  
+  await nodesCreation();
+  await edgeCreation();
   
   lay();
 }
@@ -194,7 +207,7 @@ function lay() {
     boundingBox: { x1:0, y1:0, x2:30000, y2:15000 },
     nodeDimensionsIncludeLabels: true,
     randomize: true,
-    edgeLength: 1000, // sets edge length directly in simulation
+    edgeLength: 100, // sets edge length directly in simulation
     nodeSpacing: function( node ){ return 1000; },
     maxSimulationTime: 6000,
   });

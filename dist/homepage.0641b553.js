@@ -608,80 +608,87 @@ function rndInt(min, max) {
         return node_point;
     });
 }
-async function draw() {
+async function nodesCreation() {
     api = await apiPromise;
     nodes = await api.query.proxy.proxies.entries();
     proxy_actions = await api.query.proxy.announcements.entries();
     addNodePromises = [];
     var i = 0;
-    for(nodevar in nodes){
-        nodePromise = async ()=>{
-            const node = nodevar;
-            const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
-            const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
-            //Adding node points    
-            cy.add([
-                {
-                    group: "nodes",
-                    data: {
-                        id: await checkID(node_point)
-                    },
-                    position: {
-                        x: 0,
-                        y: 0
-                    }
-                }, 
-            ]);
-            //And here the deleates
-            for (proxy of edges)cy.add([
-                {
-                    group: "nodes",
-                    data: {
-                        id: await checkID(proxy.delegate)
-                    },
-                    position: {
-                        x: 0,
-                        y: 0
-                    }
-                }, 
-            ]);
-            //Adding edges
-            for (proxy of edges)//console.log(i);
-            cy.add([
-                {
-                    group: "edges",
-                    data: {
-                        id: proxy.proxyType + i++ + "\n",
-                        source: await checkID(node_point),
-                        target: await checkID(proxy.delegate)
-                    }
-                }, 
-            ]);
-        }; //end promise
-        addNodePromises.push(nodePromise());
-    } //end for loop
+    for(nodevar in nodes)addNodePromises.push(nodePromise = async ()=>{
+        const node = nodevar;
+        const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
+        const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
+        //Adding node points    
+        cy.add([
+            {
+                group: "nodes",
+                data: {
+                    id: await checkID(node_point)
+                },
+                position: {
+                    x: 0,
+                    y: 0
+                }
+            }, 
+        ]);
+        //And here the deleates
+        for (proxy of edges)cy.add([
+            {
+                group: "nodes",
+                data: {
+                    id: await checkID(proxy.delegate)
+                },
+                position: {
+                    x: 0,
+                    y: 0
+                }
+            }, 
+        ]);
+        //Adding edges
+        for (proxy of edges)//console.log(i);
+        cy.add([
+            {
+                group: "edges",
+                data: {
+                    id: proxy.proxyType + i++ + "\n",
+                    source: await checkID(node_point),
+                    target: await checkID(proxy.delegate)
+                }
+            }, 
+        ]);
+    } //end promise
+    );
+     //end for loop
     await Promise.all(addNodePromises);
-    for(node in nodes){
-        //nodePromise = async() => {
+}
+async function edgeCreation() {
+    api = await apiPromise;
+    nodes = await api.query.proxy.proxies.entries();
+    proxy_actions = await api.query.proxy.announcements.entries();
+    addNodePromises = [];
+    var i = 0;
+    for(node in nodes)addNodePromises.push(nodePromise = async ()=>{
         const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
         const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
         //Adding edges
-        for (proxy of edges){
-            console.log(await checkID(proxy.delegate));
-            cy.add([
-                {
-                    group: "edges",
-                    data: {
-                        id: proxy.proxyType + i++ + "\n",
-                        source: await checkID(node_point),
-                        target: await checkID(proxy.delegate)
-                    }
-                }, 
-            ]);
-        }
-    //}; //end promise
-    //addNodePromises.push(nodePromise());
-    } //end for loop
+        for (proxy of edges)//console.log(await checkID(proxy.delegate));
+        cy.add([
+            {
+                group: "edges",
+                data: {
+                    id: proxy.proxyType + i++ + "\n",
+                    source: await checkID(node_point),
+                    target: await checkID(proxy.delegate)
+                }
+            }, 
+        ]);
+    } //end promise
+    );
+     //end for loop
+}
+async function draw() {
+    await nodesCreation();
+    await edgeCreation();
     lay();
 }
 //Layout option "cola", thanks maxkfranz. https://github.com/cytoscape/cytoscape.js-cola
@@ -697,7 +704,7 @@ function lay() {
         },
         nodeDimensionsIncludeLabels: true,
         randomize: true,
-        edgeLength: 1000,
+        edgeLength: 100,
         nodeSpacing: function(node) {
             return 1000;
         },
