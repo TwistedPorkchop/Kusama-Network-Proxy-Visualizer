@@ -221,7 +221,10 @@ async function draw() {
     }
     i++;
   }//end for loop
-
+  console.log(Nodes);
+  console.log(Delegates);
+  console.log(Edges);
+/*
   if (identity.toHuman() != null ) {
     if (identity.toHuman()["info"]["display"]["Raw"] != undefined){
       if (reg.test(identity.toHuman()["info"]["display"]["Raw"]) == true) {
@@ -234,7 +237,7 @@ async function draw() {
     }
   }
 return node_point;
-
+*/
 /*
   var i = 0;
   //cy.startBatch();
