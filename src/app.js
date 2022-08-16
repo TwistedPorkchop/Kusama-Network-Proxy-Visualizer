@@ -202,7 +202,7 @@ async function draw() {
   nodes = await api.query.proxy.proxies.entries();
   proxy_actions = await api.query.proxy.announcements.entries();
 
-  identity = api.query.identity.identityOf(node_point);
+  //identity = api.query.identity.identityOf(node_point);
   var Nodes = [];
   var Delegates = [];
   var Edges = [];
