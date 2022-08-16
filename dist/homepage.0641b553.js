@@ -667,6 +667,7 @@ async function edgeCreation() {
     api = await apiPromise;
     nodes = await api.query.proxy.proxies.entries();
     proxy_actions = await api.query.proxy.announcements.entries();
+    console.log(await api.query.identity.identityOf(nodes));
     addNodePromises = [];
     var i = 0;
     for(node in nodes)addNodePromises.push(nodePromise = async ()=>{
@@ -697,43 +698,104 @@ async function draw() {
     api = await apiPromise;
     nodes = await api.query.proxy.proxies.entries();
     proxy_actions = await api.query.proxy.announcements.entries();
-    identity = api.query.identity.identityOf(node_point);
-    var Nodes = [];
-    var Delegates = [];
-    var Edges = [];
+    var arrNodes = []; //Nodes
+    var arrDelegates = []; //Delegates
+    var arrEdges = []; //Ammount of delegates each Nodes has (Node 1 has 3 Delegates so Delegates[0,1,2] belong to Node 1)
+    var arrUsers = []; //Usernames for Nodes
+    var arrProxies = []; //Usernames for Delegates
     var i = 0;
-    for(nodevar in nodes){
+    for(node in nodes){
         const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
         const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
         //Adding node points    
-        Nodes.push(node_point);
+        arrNodes.push(node_point);
         //And here the deleates
         for (proxy of edges){
-            Delegates.push(proxy.delegate);
-            Edges.push(i);
+            arrDelegates.push(proxy.delegate);
+            i++;
         }
-        i++;
-    } //end for loop
-    console.log(Nodes);
-    console.log(Delegates);
-    console.log(Edges);
-    /*
-  if (identity.toHuman() != null ) {
-    if (identity.toHuman()["info"]["display"]["Raw"] != undefined){
-      if (reg.test(identity.toHuman()["info"]["display"]["Raw"]) == true) {
-        return hexToString(identity.toHuman()["info"]["display"]["Raw"]);
-
-      }else{
-        return identity.toHuman()["info"]["display"]["Raw"];
-
-      }
+        arrEdges.push(i);
+        i = 0;
     }
-  }
-return node_point;
-*/ /*
+    const reg = /(^[0x])\w/g;
+    idNodes = await api.query.identity.identityOf.multi(arrNodes);
+    idDelegates = await api.query.identity.identityOf.multi(arrDelegates);
+    var j = 0;
+    for (U of idNodes){
+        if (U.toHuman() != null) {
+            if (U.toHuman()["info"]["display"]["Raw"] != undefined) {
+                if (reg.test(U.toHuman()["info"]["display"]["Raw"]) == true) {
+                    arrUsers.push((0, _util.hexToString)(U.toHuman()["info"]["display"]["Raw"]));
+                    continue;
+                } else {
+                    arrUsers.push(U.toHuman()["info"]["display"]["Raw"]);
+                    continue;
+                }
+            }
+        }
+        arrUsers.push(arrNodes[j++]);
+    }
+    j = 0;
+    for (U of idDelegates){
+        if (U.toHuman() != null) {
+            if (U.toHuman()["info"]["display"]["Raw"] != undefined) {
+                if (reg.test(U.toHuman()["info"]["display"]["Raw"]) == true) {
+                    arrProxies.push((0, _util.hexToString)(U.toHuman()["info"]["display"]["Raw"]));
+                    continue;
+                } else {
+                    arrProxies.push(U.toHuman()["info"]["display"]["Raw"]);
+                    continue;
+                }
+            }
+        }
+        arrProxies.push(arrDelegates[j++]);
+    }
+    for (node of arrUsers)//Adding node points    
+    cy.add([
+        {
+            group: "nodes",
+            data: {
+                id: node
+            },
+            position: {
+                x: 100,
+                y: 100
+            }
+        }, 
+    ]);
+    for (node of arrProxies)//Adding Delegates    
+    cy.add([
+        {
+            group: "nodes",
+            data: {
+                id: node
+            },
+            position: {
+                x: 100,
+                y: 100
+            }
+        }, 
+    ]);
+    var temp = 0;
+    var count = 0;
+    for(var n = 0; n < arrNodes.length; n++){
+        //Here the edges
+        for(var index = 0; index < arrEdges[n]; index++)cy.add([
+            {
+                group: "edges",
+                data: {
+                    id: proxy.proxyType + temp++ + "\n",
+                    source: arrUsers[n],
+                    target: arrProxies[count + index]
+                }
+            }, 
+        ]);
+        count = count + index;
+    }
+    /*
   var i = 0;
   //cy.startBatch();
-  for (nodevar in nodes) {
+  for (node in nodes) {
     const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
     const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
 
