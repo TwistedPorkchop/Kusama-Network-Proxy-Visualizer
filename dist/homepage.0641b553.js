@@ -566,7 +566,7 @@ var cy = cytoscape({
                 "curve-style": "bezier",
                 "arrow-scale": 2,
                 "control-point-step-size": 100,
-                //label: "data(id)",
+                label: "data(label)",
                 color: "white"
             }
         }
@@ -694,32 +694,29 @@ async function edgeCreation() {
         console.log("Error");
     });
 }
+////////////////////////////////////MAIN FUNCTION //////////////////////////////////
 async function draw() {
     api = await apiPromise;
     nodes = await api.query.proxy.proxies.entries();
     proxy_actions = await api.query.proxy.announcements.entries();
     var arrNodes = []; //Nodes
     var arrDelegates = []; //Delegates
-    var arrEdges = []; //Ammount of delegates each Nodes has (Node 1 has 3 Delegates so Delegates[0,1,2] belong to Node 1)
     var arrUsers = []; //Usernames for Nodes
     var arrProxies = []; //Usernames for Delegates
-    var i = 0;
     for(node in nodes){
         const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
         const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
         //Adding node points    
         arrNodes.push(node_point);
         //And here the deleates
-        for (proxy of edges){
-            arrDelegates.push(proxy.delegate);
-            i++;
-        }
-        arrEdges.push(i);
-        i = 0;
+        let arrTemp = [];
+        for (proxy of edges)arrTemp.push(proxy.delegate);
+        arrDelegates.push(arrTemp);
     }
+    //Checking for usernames and placing them into arrUsers & arrProxies
     const reg = /(^[0x])\w/g;
     idNodes = await api.query.identity.identityOf.multi(arrNodes);
-    idDelegates = await api.query.identity.identityOf.multi(arrDelegates);
+    idDelegates = await api.query.identity.identityOf.multi(arrDelegates.flat());
     var j = 0;
     for (U of idNodes){
         if (U.toHuman() != null) {
@@ -735,20 +732,20 @@ async function draw() {
         }
         arrUsers.push(arrNodes[j++]);
     }
-    j = 0;
-    for (U of idDelegates){
-        if (U.toHuman() != null) {
-            if (U.toHuman()["info"]["display"]["Raw"] != undefined) {
-                if (reg.test(U.toHuman()["info"]["display"]["Raw"]) == true) {
-                    arrProxies.push((0, _util.hexToString)(U.toHuman()["info"]["display"]["Raw"]));
-                    continue;
-                } else {
-                    arrProxies.push(U.toHuman()["info"]["display"]["Raw"]);
-                    continue;
-                }
+    arrProxies = JSON.parse(JSON.stringify(arrDelegates)); //Copying arrDelegates into arrProxies
+    for(let i = 0; i < arrDelegates.length; i++)for(let j1 = 0; j1 < arrDelegates[i].length; j1++){
+        //check if there is a encoded username linked to the acocunt
+        if (idDelegates[j1].toHuman() != null) {
+            if (idDelegates[j1].toHuman()["info"]["display"]["Raw"] != undefined) {
+                //If yes then we test if there are emojis or not (defined by having a 0x at the start)
+                if (reg.test(idDelegates[j1].toHuman()["info"]["display"]["Raw"]) == true) arrProxies[i][j1] = (0, _util.hexToString)(idDelegates[j1].toHuman()["info"]["display"]["Raw"]);
+                else arrProxies[i][j1] = idDelegates[j1].toHuman()["info"]["display"]["Raw"];
+                 //Replace the values in arrProxies
             }
         }
-        arrProxies.push(arrDelegates[j++]);
+        if (j1 == arrDelegates[i].length - 1) for(let index = 0; index < j1; index++)idDelegates.shift();
+         //My logic is that i'm too lazy to try and do math to keep track of the postion we are in (like Array[0][1] = 2nd user Array[1][0] = 3rd) 
+    //so I'm deleting each user that has been iterated over so that in the next array idDelegates[0] will always be == to arrProxies[i][0]
     }
     for (node of arrUsers)//Adding node points    
     cy.add([
@@ -763,7 +760,7 @@ async function draw() {
             }
         }, 
     ]);
-    for (node of arrProxies)//Adding Delegates    
+    for (node of arrProxies.flat())//Adding Delegates    
     cy.add([
         {
             group: "nodes",
@@ -776,22 +773,19 @@ async function draw() {
             }
         }, 
     ]);
-    var temp = 0;
-    var count = 0;
-    for(var n = 0; n < arrNodes.length; n++){
-        //Here the edges
-        for(var index = 0; index < arrEdges[n]; index++)cy.add([
-            {
-                group: "edges",
-                data: {
-                    id: proxy.proxyType + temp++ + "\n",
-                    source: arrUsers[n],
-                    target: arrProxies[count + index]
-                }
-            }, 
-        ]);
-        count = count + index;
-    }
+    var temp = 0; //varible to keep the id of each edge unique to each other, otherwise it wont render
+    for(var n = 0; n < arrUsers.length; n++)//Here the edges
+    for (D of arrProxies[n])cy.add([
+        {
+            group: "edges",
+            data: {
+                id: temp++,
+                label: proxy.proxyType,
+                source: arrUsers[n],
+                target: D
+            }
+        }, 
+    ]);
     /*
   var i = 0;
   //cy.startBatch();
@@ -853,8 +847,8 @@ function lay() {
         boundingBox: {
             x1: 0,
             y1: 0,
-            x2: 3000,
-            y2: 1500
+            x2: 6000,
+            y2: 1000
         },
         nodeDimensionsIncludeLabels: true,
         randomize: true,
