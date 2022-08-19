@@ -551,7 +551,7 @@ var cy = cytoscape({
             selector: "node",
             style: {
                 "background-color": "white",
-                label: "data(id)",
+                label: "data(username)",
                 color: "white",
                 "text-outline-color": "white"
             }
@@ -698,9 +698,10 @@ async function edgeCreation() {
 async function draw() {
     api = await apiPromise;
     nodes = await api.query.proxy.proxies.entries();
-    proxy_actions = await api.query.proxy.announcements.entries();
+    proxy_actions = await api.query.proxy.announcements.entries(); //Pending actions
     var arrNodes = []; //Nodes
     var arrDelegates = []; //Delegates
+    var proxyType = [];
     var arrUsers = []; //Usernames for Nodes
     var arrProxies = []; //Usernames for Delegates
     for(node in nodes){
@@ -710,9 +711,14 @@ async function draw() {
         arrNodes.push(node_point);
         //And here the deleates
         let arrTemp = [];
-        for (proxy of edges)arrTemp.push(proxy.delegate);
+        for (proxy of edges){
+            //console.log("Source: " + node_point +" Target : " + proxy.delegate + " P type : " + proxy.proxyType + " index " + arrNodes.indexOf(node_point));
+            arrTemp.push(proxy.delegate);
+            proxyType.push(proxy.proxyType);
+        }
         arrDelegates.push(arrTemp);
     }
+    console.log(arrNodes[123] + " " + arrDelegates[123]);
     //Checking for usernames and placing them into arrUsers & arrProxies
     const reg = /(^[0x])\w/g;
     idNodes = await api.query.identity.identityOf.multi(arrNodes);
@@ -747,12 +753,13 @@ async function draw() {
          //My logic is that i'm too lazy to try and do math to keep track of the postion we are in (like Array[0][1] = 2nd user Array[1][0] = 3rd) 
     //so I'm deleting each user that has been iterated over so that in the next array idDelegates[0] will always be == to arrProxies[i][0]
     }
-    for (node of arrUsers)//Adding node points    
+    for(var n = 0; n < arrNodes.length; n++)//Adding node points    
     cy.add([
         {
             group: "nodes",
             data: {
-                id: node
+                id: arrNodes[n],
+                username: arrUsers[n]
             },
             position: {
                 x: 100,
@@ -760,12 +767,13 @@ async function draw() {
             }
         }, 
     ]);
-    for (node of arrProxies.flat())//Adding Delegates    
+    for(var n = 0; n < arrDelegates.flat().length; n++)//Adding Delegates    
     cy.add([
         {
             group: "nodes",
             data: {
-                id: node
+                id: arrDelegates.flat()[n],
+                username: arrProxies.flat()[n]
             },
             position: {
                 x: 100,
@@ -773,19 +781,24 @@ async function draw() {
             }
         }, 
     ]);
+    console.log(arrNodes[123] + " " + arrDelegates[123]);
     var temp = 0; //varible to keep the id of each edge unique to each other, otherwise it wont render
     for(var n = 0; n < arrUsers.length; n++)//Here the edges
-    for (D of arrProxies[n])cy.add([
-        {
-            group: "edges",
-            data: {
-                id: temp++,
-                label: proxy.proxyType,
-                source: arrUsers[n],
-                target: D
-            }
-        }, 
-    ]);
+    for (D of arrDelegates[n]){
+        if (n == 123) console.log("source : " + arrNodes[n] + " delegates : " + D);
+        cy.add([
+            {
+                group: "edges",
+                data: {
+                    id: temp.toString(),
+                    label: proxyType[n],
+                    source: arrNodes[n],
+                    target: D
+                }
+            }, 
+        ]);
+        temp++;
+    }
     /*
   var i = 0;
   //cy.startBatch();
@@ -847,14 +860,14 @@ function lay() {
         boundingBox: {
             x1: 0,
             y1: 0,
-            x2: 6000,
-            y2: 1000
+            x2: 8000,
+            y2: 2000
         },
         nodeDimensionsIncludeLabels: true,
         randomize: true,
-        edgeLength: 100,
+        edgeLength: 1000,
         nodeSpacing: function(node) {
-            return 100;
+            return 50;
         },
         maxSimulationTime: 6000
     });
@@ -869,7 +882,7 @@ async function Search() {
     //cy.fit(cy.$('#'+searchTerm));
     cy.zoom({
         level: 0.5,
-        position: cy.$("#" + id).position()
+        position: cy.$("#" + searchTerm).position()
     });
     console.log("search Attempt for " + searchTerm + " Found " + id);
 }

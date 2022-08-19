@@ -20,7 +20,7 @@ var cy = cytoscape({
       selector: "node",
       style: {
         "background-color": "white",
-        label: "data(id)",
+        label: "data(username)",
         color: "white",
         "text-outline-color" : "white",
       }
@@ -200,10 +200,12 @@ async function draw() {
   
   api = await apiPromise;
   nodes = await api.query.proxy.proxies.entries();
-  proxy_actions = await api.query.proxy.announcements.entries();
-
+  proxy_actions = await api.query.proxy.announcements.entries();//Pending actions
+  
   var arrNodes = [];//Nodes
   var arrDelegates = [];//Delegates
+
+  var proxyType = [];
 
   var arrUsers = [];//Usernames for Nodes
   var arrProxies = [];//Usernames for Delegates
@@ -212,19 +214,20 @@ async function draw() {
   for (node in nodes) {
     const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
     const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
-
+    
     //Adding node points    
     arrNodes.push(node_point);
 
     //And here the deleates
     let arrTemp = [];
     for (proxy of edges) {
+      //console.log("Source: " + node_point +" Target : " + proxy.delegate + " P type : " + proxy.proxyType + " index " + arrNodes.indexOf(node_point));
       arrTemp.push(proxy.delegate);
-
+      proxyType.push(proxy.proxyType);
     }
     arrDelegates.push(arrTemp);
   }
-
+  console.log(arrNodes[123] + " " + arrDelegates[123]);
   //Checking for usernames and placing them into arrUsers & arrProxies
   const reg = /(^[0x])\w/g;
   idNodes = await api.query.identity.identityOf.multi(arrNodes);
@@ -274,13 +277,14 @@ async function draw() {
     }
   }
   
-  for (node of arrUsers) {
+  for (var n = 0; n < arrNodes.length; n++) {
 
     //Adding node points    
     cy.add([{
         group: "nodes",
         data: {
-            id: node
+            id: arrNodes[n],
+            username: arrUsers[n],
         },
         position: {
             x: 100,
@@ -288,13 +292,14 @@ async function draw() {
         }
     }, ]);
   }
-  for (node of arrProxies.flat()) {
+  for (var n = 0; n < arrDelegates.flat().length; n++) {
 
     //Adding Delegates    
     cy.add([{
         group: "nodes",
         data: {
-            id: node
+            id: arrDelegates.flat()[n],
+            username: arrProxies.flat()[n],
         },
         position: {
             x: 100,
@@ -302,21 +307,22 @@ async function draw() {
         }
     }, ]);
   }
-
+  console.log(arrNodes[123] + " " + arrDelegates[123]);
   var temp = 0;//varible to keep the id of each edge unique to each other, otherwise it wont render
   for (var n = 0; n < arrUsers.length; n++) {
     //Here the edges
-    for (D of arrProxies[n]) {
-      
+    for (D of arrDelegates[n]) {
+      if(n == 123){console.log("source : " + arrNodes[n] + " delegates : " + D)};
       cy.add([{
         group: "edges",
         data: {
-            id: temp++ ,
-            label: proxy.proxyType,
-            source: arrUsers[n],
+            id: temp.toString() ,
+            label: proxyType[n],
+            source: arrNodes[n],
             target: D
         }
       }, ]);
+      temp++;
     }
   }
 
@@ -380,11 +386,11 @@ function lay() {
   var layout = cy.layout({
     name: 'cola',
     ungrabifyWhileSimulating: true,
-    boundingBox: { x1:0, y1:0, x2:6000, y2:1000 },
+    boundingBox: { x1:0, y1:0, x2:8000, y2:2000 },
     nodeDimensionsIncludeLabels: true,
     randomize: true,
-    edgeLength: 100, // sets edge length directly in simulation
-    nodeSpacing: function( node ){ return 100; },
+    edgeLength: 1000, // sets edge length directly in simulation
+    nodeSpacing: function( node ){ return 50; },
     maxSimulationTime: 6000,
   });
 
@@ -400,7 +406,7 @@ async function Search() {
   //cy.fit(cy.$('#'+searchTerm));
   cy.zoom({
     level: 0.5,
-    position: cy.$('#'+ id).position()
+    position: cy.$('#'+ searchTerm).position()
   });
   console.log("search Attempt for " + searchTerm + " Found " + id );
 }
