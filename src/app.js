@@ -3,6 +3,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { hexToString } from '@polkadot/util';
 
 var cytoscape = require('cytoscape');
+var htmlStringify = require('html-stringify');
 let cola = require('cytoscape-cola');
 
 cytoscape.use( cola ); // register extension
@@ -39,7 +40,6 @@ var cy = cytoscape({
         "text-outline-color" : "white",
       }
     },
-
     {
       selector: "edge",
       style: {
@@ -68,7 +68,7 @@ var cy = cytoscape({
 const layout = cy.layout({
   name: "cola",
   animate: true, // whether to show the layout as it's running
-  refresh: 1, // number of ticks per frame; higher is faster but more jerky
+  refresh: 4, // number of ticks per frame; higher is faster but more jerky
   maxSimulationTime: 6000, // max length in ms to run the layout
   ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
   fit: false, // on every layout reposition of nodes, fit the viewport
@@ -85,22 +85,13 @@ const layout = cy.layout({
   avoidOverlap: true, // if true, prevents overlap of node bounding boxes
   handleDisconnected: true, // if true, avoids disconnected components from overlapping
   convergenceThreshold: 0.03, // when the alpha value (system energy) falls below this value, the layout stops
-  nodeSpacing: function( node ){ return 10; }, // extra spacing around nodes
-  flow: undefined, // use DAG/tree flow layout if specified, e.g. { axis: 'y', minSeparation: 30 }
-  alignment: undefined, // relative alignment constraints on nodes, e.g. {vertical: [[{node: node1, offset: 0}, {node: node2, offset: 5}]], horizontal: [[{node: node3}, {node: node4}], [{node: node5}, {node: node6}]]}
-  gapInequalities: undefined, // list of inequality constraints for the gap between the nodes, e.g. [{"axis":"y", "left":node1, "right":node2, "gap":25}]
+  nodeSpacing: function( node ){ return cy.width()/6; }, // extra spacing around nodes
   centerGraph: false, // adjusts the node positions initially to center the graph (pass false if you want to start the layout from the current position)
 
   // different methods of specifying edge length
   // each can be a constant numerical value or a function like `function( edge ){ return 2; }`
   edgeLength: function( edge ){ return cy.width()/5; }, // sets edge length directly in simulation
   edgeSymDiffLength: function( edge ){ return cy.width()/3; }, // symmetric diff edge length in simulation
-  edgeJaccardLength: undefined, // jaccard edge length in simulation
-
-  // iterations of cola algorithm; uses default values on undefined
-  unconstrIter: undefined, // unconstrained initial layout iterations
-  userConstIter: undefined, // initial layout iterations with user-specified constraints
-  allConstIter: undefined, // initial layout 
 });
 
 /*
@@ -116,9 +107,12 @@ cy.on("select", "node", function(evt) {
 });
 
 function sidebar_display(node_data){
-  document.getElementById("sidebar");
-  console.log(node_data);
+  sidebar = document.getElementById("sidebar");
+  
   // populate sidebar with node data
+  sidebar.innerHTML = htmlStringify(node_data);
+  console.log(sidebar.childNodes);
+  // TODO: display logic
 }
 
 

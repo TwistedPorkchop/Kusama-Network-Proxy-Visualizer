@@ -6,7 +6,8 @@
     "cytoscape-cola": "2.5.1",
     "jquery": "^3.6.0",
     "lib": "^4.3.3",
-    "web-worker": "^1.2.0"
+    "web-worker": "^1.2.0",
+    "html-stringify": "0.0.3"
   },
   "name": "kusama-network-proxy-visualizer",
   "description": "",
