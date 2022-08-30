@@ -712,13 +712,11 @@ async function draw() {
         //And here the deleates
         let arrTemp = [];
         for (proxy of edges){
-            //console.log("Source: " + node_point +" Target : " + proxy.delegate + " P type : " + proxy.proxyType + " index " + arrNodes.indexOf(node_point));
             arrTemp.push(proxy.delegate);
             proxyType.push(proxy.proxyType);
         }
-        arrDelegates.push(arrTemp);
+        arrDelegates.push(arrTemp); //2D array that has the same length as ArrNode. Thus each array in arrDelegatres represents the delegates of the same inedex in arrNodes
     }
-    console.log(arrNodes[123] + " " + arrDelegates[123]);
     //Checking for usernames and placing them into arrUsers & arrProxies
     const reg = /(^[0x])\w/g;
     idNodes = await api.query.identity.identityOf.multi(arrNodes);
@@ -741,10 +739,10 @@ async function draw() {
     arrProxies = JSON.parse(JSON.stringify(arrDelegates)); //Copying arrDelegates into arrProxies
     for(let i = 0; i < arrDelegates.length; i++)for(let j1 = 0; j1 < arrDelegates[i].length; j1++){
         //check if there is a encoded username linked to the acocunt
-        if (idDelegates[j1].toHuman() != null) {
-            if (idDelegates[j1].toHuman()["info"]["display"]["Raw"] != undefined) {
+        if (idDelegates[j1].toHuman() !== null) {
+            if (idDelegates[j1].toHuman()["info"]["display"]["Raw"] !== undefined) {
                 //If yes then we test if there are emojis or not (defined by having a 0x at the start)
-                if (reg.test(idDelegates[j1].toHuman()["info"]["display"]["Raw"]) == true) arrProxies[i][j1] = (0, _util.hexToString)(idDelegates[j1].toHuman()["info"]["display"]["Raw"]);
+                if (reg.test(idDelegates[j1].toHuman()["info"]["display"]["Raw"]) === true) arrProxies[i][j1] = (0, _util.hexToString)(idDelegates[j1].toHuman()["info"]["display"]["Raw"]);
                 else arrProxies[i][j1] = idDelegates[j1].toHuman()["info"]["display"]["Raw"];
                  //Replace the values in arrProxies
             }
@@ -753,13 +751,23 @@ async function draw() {
          //My logic is that i'm too lazy to try and do math to keep track of the postion we are in (like Array[0][1] = 2nd user Array[1][0] = 3rd) 
     //so I'm deleting each user that has been iterated over so that in the next array idDelegates[0] will always be == to arrProxies[i][0]
     }
-    for(var n = 0; n < arrNodes.length; n++)//Adding node points    
+    console.log(arrNodes.length + " vs " + arrUsers.length);
+    console.log(arrDelegates.flat().length + " vs " + arrProxies.flat().length);
+    var noDupes = [
+        ...new Set(JSON.parse(JSON.stringify(arrNodes.concat(arrDelegates.flat()))))
+    ]; //New array that will contain all the users without duplicates.
+    var noDupesNamed = [
+        ...new Set(JSON.parse(JSON.stringify(arrUsers.concat(arrProxies.flat()))))
+    ]; //Same thing as noDupes but with usernames
+    console.log(noDupes);
+    console.log(noDupesNamed);
+    for(var n = 0; n < noDupes.length; n++)//Adding nodes  
     cy.add([
         {
             group: "nodes",
             data: {
-                id: arrNodes[n],
-                username: arrUsers[n]
+                id: noDupes[n],
+                username: noDupesNamed[n]
             },
             position: {
                 x: 100,
@@ -767,25 +775,39 @@ async function draw() {
             }
         }, 
     ]);
-    for(var n = 0; n < arrDelegates.flat().length; n++)//Adding Delegates    
-    cy.add([
-        {
-            group: "nodes",
-            data: {
-                id: arrDelegates.flat()[n],
-                username: arrProxies.flat()[n]
-            },
-            position: {
-                x: 100,
-                y: 100
-            }
-        }, 
-    ]);
-    console.log(arrNodes[123] + " " + arrDelegates[123]);
-    var temp = 0; //varible to keep the id of each edge unique to each other, otherwise it wont render
+    /*
+  for (var n = 0; n < arrNodes.length; n++) {
+    //Adding node points    
+    cy.add([{
+        group: "nodes",
+        data: {
+            id: arrNodes[n],
+            username: arrUsers[n],
+        },
+        position: {
+            x: 100,
+            y: 100
+        }
+    }, ]);
+  }
+  for (var n = 0; n < arrDelegates.flat().length; n++) {
+    //Adding Delegates    
+    cy.add([{
+        group: "nodes",
+        data: {
+            id: arrDelegates.flat()[n],
+            username: arrProxies.flat()[n],
+        },
+        position: {
+            x: 100,
+            y: 100
+        }
+    }, ]);
+  }
+*/ var temp = 0; //varible to keep the id of each edge unique to each other, otherwise it wont render
     for(var n = 0; n < arrUsers.length; n++)//Here the edges
     for (D of arrDelegates[n]){
-        if (n == 123) console.log("source : " + arrNodes[n] + " delegates : " + D);
+        //console.log("source : " + arrUsers[n] + " delegates : " + D + " proxyType :" + proxyType[n]);
         cy.add([
             {
                 group: "edges",
@@ -801,7 +823,7 @@ async function draw() {
     }
     /*
   var i = 0;
-  //cy.startBatch();
+
   for (node in nodes) {
     const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
     const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
@@ -849,7 +871,7 @@ async function draw() {
 
   //await nodesCreation();
   //await edgeCreation();
-  //cy.endBatch();
+
   */ lay();
 }
 //Layout option "cola", thanks maxkfranz. https://github.com/cytoscape/cytoscape.js-cola
@@ -879,12 +901,11 @@ function lay() {
 async function Search() {
     const searchTerm = document.getElementById("searchTerm").value;
     const id = await checkID(searchTerm);
-    //cy.fit(cy.$('#'+searchTerm));
-    cy.zoom({
-        level: 0.5,
-        position: cy.$("#" + searchTerm).position()
-    });
-    console.log("search Attempt for " + searchTerm + " Found " + id);
+    cy.fit(cy.$("#" + searchTerm), 200);
+    /*cy.zoom({
+    level: 0.5,
+    position: cy.$('#'+ searchTerm).position()
+  });*/ console.log("search Attempt for " + searchTerm + " Found " + id);
 }
 // event listeners for functions
 const Fdraw = document.getElementById("draw");
