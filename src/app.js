@@ -59,6 +59,7 @@ var cy = cytoscape({
   layout: {
     name: "cola",
   },
+  wheelSensitivity: 0.2,
 });
 
 
