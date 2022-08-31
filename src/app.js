@@ -3,7 +3,6 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { hexToString } from '@polkadot/util';
 
 var cytoscape = require('cytoscape');
-var htmlStringify = require('html-stringify');
 let cola = require('cytoscape-cola');
 
 cytoscape.use( cola ); // register extension
@@ -108,11 +107,24 @@ cy.on("select", "node", function(evt) {
 
 function sidebar_display(node_data){
   sidebar = document.getElementById("sidebar");
-  
+  sidebar.textContent = "";
   // populate sidebar with node data
-  sidebar.innerHTML = htmlStringify(node_data);
-  console.log(sidebar.childNodes);
-  // TODO: display logic
+  addObjectToDom(sidebar, node_data);
+}
+
+// recursive function translates an object into a dom tree
+// { key: "value" } == "<key>value</key>"
+// we can create CSS styles for these individual key/components
+function addObjectToDom(parent, object){
+  for( element in object ){
+    htmlElement = document.createElement(element);
+    if (object[element] instanceof Object){
+      addObjectToDom(htmlElement, object[element]);
+    } else {
+      htmlElement.innerText = JSON.stringify(object[element]);
+    }
+    parent.appendChild(htmlElement);
+  }
 }
 
 
@@ -220,11 +232,21 @@ async function draw(nodes, nodes_remove=[]){
             reg.test(superId[1]["Raw"])?
             hexToString(superId[1]["Raw"]):
             superId[1]["Raw"];
-          if(cy.$id(superId[0])){
+          if(!cy.$id(superId[0])){
             nametext = cy.$id(superId[0]).data("label")+"/"+parsedSuperId;
+            superEdgeId = cy.$id(idRequests[index]+superId[0]+"superidentity");
+            if(superEdgeId.length == 0)cy.add({
+              group: "edges",
+              data: {
+                id: superEdgeId,
+                label: "Super Identity",
+                source: idRequests[index],
+                target: superId[0],
+              },
+            });
           } else {
             nametext = idRequests[index];
-            cy.add(
+            cy.add([
               {
                 group: "nodes",
                 data: { 
@@ -236,12 +258,13 @@ async function draw(nodes, nodes_remove=[]){
                   y: rndInt(0, 2000)
                 },
               }
-            );
+            ]);
             //if superId is not in graph, after we add it to graph, 
             //we add it to the next round for identification, 
             //followed by it's child
             pendingIdRequests.push(superId[0]);
             pendingIdRequests.push(idRequests[index]);
+            // add edge to superID
             cy.add({
               group: "edges",
               data: {

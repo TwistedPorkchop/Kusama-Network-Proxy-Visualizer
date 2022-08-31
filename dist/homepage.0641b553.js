@@ -536,7 +536,6 @@ function hmrAcceptRun(bundle, id) {
 var _api = require("@polkadot/api");
 var _util = require("@polkadot/util");
 var cytoscape = require("cytoscape");
-var htmlStringify = require("html-stringify");
 let cola = require("cytoscape-cola");
 cytoscape.use(cola); // register extension
 // Construct
@@ -638,10 +637,20 @@ cy.on("select", "node", function(evt) {
 });
 function sidebar_display(node_data) {
     sidebar = document.getElementById("sidebar");
+    sidebar.textContent = "";
     // populate sidebar with node data
-    sidebar.innerHTML = htmlStringify(node_data);
-    console.log(sidebar.childNodes);
-// TODO: display logic
+    addObjectToDom(sidebar, node_data);
+}
+// recursive function translates an object into a dom tree
+// { key: "value" } == "<key>value</key>"
+// we can create CSS styles for these individual key/components
+function addObjectToDom(parent, object) {
+    for(element in object){
+        htmlElement = document.createElement(element);
+        if (object[element] instanceof Object) addObjectToDom(htmlElement, object[element]);
+        else htmlElement.innerText = JSON.stringify(object[element]);
+        parent.appendChild(htmlElement);
+    }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------//
 function rndInt(min, max) {
@@ -736,25 +745,39 @@ async function draw(nodes, nodes_remove = []) {
                 superId = superIdResponse.toHuman();
                 if (superId) {
                     var parsedSuperId = reg.test(superId[1]["Raw"]) ? (0, _util.hexToString)(superId[1]["Raw"]) : superId[1]["Raw"];
-                    if (cy.$id(superId[0])) nametext = cy.$id(superId[0]).data("label") + "/" + parsedSuperId;
-                    else {
-                        nametext = idRequests[index];
-                        cy.add({
-                            group: "nodes",
+                    if (!cy.$id(superId[0])) {
+                        nametext = cy.$id(superId[0]).data("label") + "/" + parsedSuperId;
+                        superEdgeId = cy.$id(idRequests[index] + superId[0] + "superidentity");
+                        if (superEdgeId.length == 0) cy.add({
+                            group: "edges",
                             data: {
-                                id: superId[0],
-                                label: superId[0]
-                            },
-                            position: {
-                                x: rndInt(0, 2000),
-                                y: rndInt(0, 2000)
+                                id: superEdgeId,
+                                label: "Super Identity",
+                                source: idRequests[index],
+                                target: superId[0]
                             }
                         });
+                    } else {
+                        nametext = idRequests[index];
+                        cy.add([
+                            {
+                                group: "nodes",
+                                data: {
+                                    id: superId[0],
+                                    label: superId[0]
+                                },
+                                position: {
+                                    x: rndInt(0, 2000),
+                                    y: rndInt(0, 2000)
+                                }
+                            }
+                        ]);
                         //if superId is not in graph, after we add it to graph, 
                         //we add it to the next round for identification, 
                         //followed by it's child
                         pendingIdRequests.push(superId[0]);
                         pendingIdRequests.push(idRequests[index]);
+                        // add edge to superID
                         cy.add({
                             group: "edges",
                             data: {
@@ -805,7 +828,7 @@ for each node, have links in the sidebar to chain explorers??? and other analyti
 when an edge is selected, we display those links and identity information for the nodes on both sides of the edge.
 */ 
 
-},{"@polkadot/api":"gqBQQ","@polkadot/util":"3HnHw","cytoscape":"cxe8j","cytoscape-cola":"9EsJJ","html-stringify":"eW9tO"}],"gqBQQ":[function(require,module,exports) {
+},{"@polkadot/api":"gqBQQ","@polkadot/util":"3HnHw","cytoscape":"cxe8j","cytoscape-cola":"9EsJJ"}],"gqBQQ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 // Copyright 2017-2022 @polkadot/api authors & contributors
@@ -4730,9 +4753,9 @@ parcelHelpers.export(exports, "hasWasm", ()=>hasWasm);
 // Copyright 2017-2022 @polkadot/util authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 var _xBigint = require("@polkadot/x-bigint"); // Since we run in very different environments, we have to ensure we have all
+var __dirname = "node_modules/@polkadot/util";
 var Buffer = require("buffer").Buffer;
 var process = require("process");
-var __dirname = "node_modules/@polkadot/util";
 const hasBigInt = typeof (0, _xBigint.BigInt) === "function" && typeof (0, _xBigint.BigInt).asIntN === "function";
 const hasBuffer = typeof Buffer !== "undefined";
 const hasCjs = true;
@@ -89785,45 +89808,6 @@ function powerGraphGridLayout(graph, size, grouppadding) {
 }
 exports.powerGraphGridLayout = powerGraphGridLayout;
 
-},{"./layout":"1olS3","./gridrouter":"2tjTh"}],"eW9tO":[function(require,module,exports) {
-exports = module.exports = require("./lib/htmlStringify");
-
-},{"./lib/htmlStringify":"i0qmz"}],"i0qmz":[function(require,module,exports) {
-/**
- * Renders an object as formatted HTML
- *
- * @param {Object} obj
- * @return {String} html
- * @api public
- */ function htmlStringify(obj, fromRecur) {
-    var tag = fromRecur ? "span" : "div";
-    var nextLevel = (fromRecur || 0) + 1;
-    // strings
-    if (typeof obj == "string") return "<" + tag + ' style="color: #0e4889; cursor: default;">"' + obj + '"</' + tag + ">";
-    else if (typeof obj == "boolean" || obj === null || obj === undefined) return "<" + tag + '><em style="color: #06624b; cursor: default;">' + obj + "</em></" + tag + ">";
-    else if (typeof obj == "number") return "<" + tag + ' style="color: #ca000a; cursor: default;">' + obj + "</" + tag + ">";
-    else if (Object.prototype.toString.call(obj) == "[object Date]") return "<" + tag + ' style="color: #009f7b; cursor: default;">' + obj + "</" + tag + ">";
-    else if (Array.isArray(obj)) {
-        var rtn = "<" + tag + ' style="color: #666; cursor: default;">Array: [';
-        if (!obj.length) return rtn + "]</" + tag + ">";
-        rtn += "</" + tag + '><div style="padding-left: 20px;">';
-        for(var i = 0; i < obj.length; i++){
-            rtn += "<span></span>" + htmlStringify(obj[i], nextLevel); // give the DOM structure has as many elements as an object, for collapse behaviour
-            if (i < obj.length - 1) rtn += ", <br>";
-        }
-        return rtn + "</div><" + tag + ' style="color: #666">]</' + tag + ">";
-    } else if (obj && typeof obj == "object") {
-        var rtn = "", len = Object.keys(obj).length;
-        if (fromRecur && !len) return "<" + tag + ' style="color: #999; cursor: default;">Object: {}</' + tag + ">";
-        if (fromRecur) rtn += "<" + tag + ' style="color: #0b89b6">Object: {</' + tag + '><div class="_stringify_recur _stringify_recur_level_' + fromRecur + '" style="padding-left: 20px;">';
-        for(var key in obj)if (typeof obj[key] != "function") rtn += '<div><span style="padding-right: 5px; cursor: default;">' + key + ":</span>" + htmlStringify(obj[key], nextLevel) + "</div>";
-        if (fromRecur) rtn += "</div><" + tag + ' style="color: #0b89b6; cursor: default;">}</' + tag + ">";
-        return rtn;
-    }
-    return "";
-}
-exports = module.exports = htmlStringify;
-
-},{}]},["7Aums","bNKaB"], "bNKaB", "parcelRequire066f")
+},{"./layout":"1olS3","./gridrouter":"2tjTh"}]},["7Aums","bNKaB"], "bNKaB", "parcelRequire066f")
 
 //# sourceMappingURL=homepage.0641b553.js.map
