@@ -19,6 +19,9 @@ async function main () {
   autoupdate = api.query.proxy.proxies.entries(async (nodes) => {
     await draw(nodes);
   });
+  autoannoncements = api.query.proxy.announcements.entries(async (announcements) => {
+    console.log(announcements);
+  });
 };
 
 window.addEventListener('load', async (event) => {
@@ -148,7 +151,6 @@ var pendingIdRequests = [] // universal scope pending ids (previous round supers
 async function draw(nodes, nodes_remove=[]){
   
   const api = await apiPromise;
-  proxy_actions = await api.query.proxy.announcements.entries();//Pending actions
   var idRequests = pendingIdRequests
   pendingIdRequests = []
 
@@ -234,8 +236,9 @@ async function draw(nodes, nodes_remove=[]){
             superId[1]["Raw"];
           if(!cy.$id(superId[0])){
             nametext = cy.$id(superId[0]).data("label")+"/"+parsedSuperId;
-            superEdgeId = cy.$id(idRequests[index]+superId[0]+"superidentity");
-            if(superEdgeId.length == 0)cy.add({
+            superEdgeId = idRequests[index]+superId[0]+"superidentity";
+            existingNode = cy.$id(superEdgeId);
+            if(existingNode.length == 0)cy.add({
               group: "edges",
               data: {
                 id: superEdgeId,
@@ -265,7 +268,9 @@ async function draw(nodes, nodes_remove=[]){
             pendingIdRequests.push(superId[0]);
             pendingIdRequests.push(idRequests[index]);
             // add edge to superID
-            cy.add({
+            superEdgeId = idRequests[index]+superId[0]+"superidentity";
+            existingNode = cy.$id(superEdgeId);
+            if(existingNode.length == 0)cy.add({
               group: "edges",
               data: {
                 id: idRequests[index]+superId[0]+"superidentity",
