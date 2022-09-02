@@ -10,6 +10,11 @@ cytoscape.use( fcose ); // register extension
 // Construct
 const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
 const apiPromise = ApiPromise.create({ provider: wsProvider });
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+var preSearch = urlParams.get("s")?urlParams.get("s"):"";
+console.log(urlParams);
+
 
 // main startup
 async function main () {
@@ -19,6 +24,7 @@ async function main () {
       return a[0].toHuman[0] - b[0].toHuman[0];
     });
     await draw(nodes);
+    console.log(preSearch);
   });
   autoannoncements = api.query.proxy.announcements.entries(async (announcements) => {
     console.log(announcements);
@@ -130,7 +136,6 @@ function objectToDomElement(parent, object, objectTag=false){
     documentObject.innerText = objectText;
   }
   parent.append(documentObject);
-  console.log(document.getElementById("sidebar").innerText);
   return documentObject;
 }
 
@@ -330,7 +335,6 @@ function lay() {
     packComponents: false,
     nodeRepulsion: function( node ){ 
       const repulsionVal = 10000 / node.closedNeighborhood().size();
-      console.log(repulsionVal);
       return repulsionVal; 
     },
     samplingType: true,
@@ -338,7 +342,6 @@ function lay() {
     nodeSeparation: 100,
     idealEdgeLength: function(edge){ 
       lengthval =  500 / edge.source().closedNeighborhood().size();
-      console.log(lengthval);
       return lengthval;
     },
     edgeElasticity: edge => 0.4,
@@ -352,23 +355,16 @@ function lay() {
     tile: false,
     // Initial cooling factor for incremental layout  
     initialEnergyOnIncremental: 0.4,
+    stop: () => {
+      if(preSearch){
+        document.getElementById("searchTerm").value = preSearch;
+        preSearch = false;
+        Search();
+      }
+    },
   });
 
   layout.run(); 
   cy.fit();
   cy.center();
 };
-/*
-line-style : The style of the edge’s line; may be solid, dotted, or dashed.
-*/
-
-/*proxies (“delegates”) should have an indication of pending announcements they’ve made on their proxied accounts (nodes)
-Delegate actions? ie Action name + Delay
-
-query api.query.proxy.announcement(address) for every delegate with a delay ***wdym with a delay?*** (if delay, query this) -
-when a related edge or node is selected, display info (number of announcements, call hashes, permissions, time to the delay being executable) on the sidebar
-external links
-
-for each node, have links in the sidebar to chain explorers??? and other analytics platforms when they are selected -
-when an edge is selected, we display those links and identity information for the nodes on both sides of the edge.
-*/

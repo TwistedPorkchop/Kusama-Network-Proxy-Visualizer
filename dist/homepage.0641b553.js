@@ -543,6 +543,10 @@ const wsProvider = new (0, _api.WsProvider)("wss://kusama-rpc.polkadot.io");
 const apiPromise = (0, _api.ApiPromise).create({
     provider: wsProvider
 });
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+var preSearch = urlParams.get("s") ? urlParams.get("s") : "";
+console.log(urlParams);
 // main startup
 async function main() {
     api = await apiPromise;
@@ -551,6 +555,7 @@ async function main() {
             return a[0].toHuman[0] - b[0].toHuman[0];
         });
         await draw(nodes);
+        console.log(preSearch);
     });
     autoannoncements = api.query.proxy.announcements.entries(async (announcements)=>{
         console.log(announcements);
@@ -642,7 +647,6 @@ function objectToDomElement(parent, object, objectTag = false) {
         documentObject.innerText = objectText;
     }
     parent.append(documentObject);
-    console.log(document.getElementById("sidebar").innerText);
     return documentObject;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -822,7 +826,6 @@ function lay() {
         packComponents: false,
         nodeRepulsion: function(node) {
             const repulsionVal = 10000 / node.closedNeighborhood().size();
-            console.log(repulsionVal);
             return repulsionVal;
         },
         samplingType: true,
@@ -830,7 +833,6 @@ function lay() {
         nodeSeparation: 100,
         idealEdgeLength: function(edge) {
             lengthval = 500 / edge.source().closedNeighborhood().size();
-            console.log(lengthval);
             return lengthval;
         },
         edgeElasticity: (edge)=>0.4,
@@ -848,7 +850,14 @@ function lay() {
         // For enabling tiling
         tile: false,
         // Initial cooling factor for incremental layout  
-        initialEnergyOnIncremental: 0.4
+        initialEnergyOnIncremental: 0.4,
+        stop: ()=>{
+            if (preSearch) {
+                document.getElementById("searchTerm").value = preSearch;
+                preSearch = false;
+                Search();
+            }
+        }
     });
     layout.run();
     cy.fit();
@@ -4781,9 +4790,9 @@ parcelHelpers.export(exports, "hasWasm", ()=>hasWasm);
 // Copyright 2017-2022 @polkadot/util authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 var _xBigint = require("@polkadot/x-bigint"); // Since we run in very different environments, we have to ensure we have all
-var __dirname = "node_modules/@polkadot/util";
 var Buffer = require("buffer").Buffer;
 var process = require("process");
+var __dirname = "node_modules/@polkadot/util";
 const hasBigInt = typeof (0, _xBigint.BigInt) === "function" && typeof (0, _xBigint.BigInt).asIntN === "function";
 const hasBuffer = typeof Buffer !== "undefined";
 const hasCjs = true;
