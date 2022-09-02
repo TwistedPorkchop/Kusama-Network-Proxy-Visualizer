@@ -543,6 +543,18 @@ const wsProvider = new (0, _api.WsProvider)("wss://kusama-rpc.polkadot.io");
 const apiPromise = (0, _api.ApiPromise).create({
     provider: wsProvider
 });
+// main startup
+async function main() {
+    api = await apiPromise;
+    pre_nodes = await api.query.proxy.proxies.entries();
+    await draw(pre_nodes);
+    autoupdate = api.query.proxy.proxies.entries(async (nodes)=>{
+        await draw(nodes);
+    });
+}
+window.addEventListener("load", async (event)=>{
+    await main();
+});
 var cy = cytoscape({
     container: document.getElementById("cy"),
     style: [
@@ -551,7 +563,7 @@ var cy = cytoscape({
             selector: "node",
             style: {
                 "background-color": "white",
-                label: "data(username)",
+                label: "data(label)",
                 color: "white",
                 "text-outline-color": "white"
             }
@@ -572,309 +584,61 @@ var cy = cytoscape({
         }
     ],
     layout: {
-        name: "grid",
-        rows: 1
+        name: "cola"
     },
     wheelSensitivity: 0.2
 });
-//Not sure what this is about, I think its to animate grabing nodes.
-cy.on("tap", "node", function(evt) {
-    const node = evt.target;
-    const color = node.style().backgroundColor === "hotpink" ? "blue" : "hotpink";
-    node.animate({
-        style: {
-            backgroundColor: color
-        }
-    }, {
-        duration: 750
-    });
-});
-//------------------------------------------------------------------------------------------------------------------------------------------------------------//
-/*
-function rndInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
-}*/ async function checkID(node_point) {
-    api = await apiPromise;
-    //Checking if there are usernames to use the nodes
-    const reg = /(^[0x])\w/g;
-    users = api.query.identity.identityOf(node_point);
-    try {
-        return users.then((identity)=>{
-            if (identity.toHuman() != null) {
-                if (identity.toHuman()["info"]["display"]["Raw"] != undefined) {
-                    if (reg.test(identity.toHuman()["info"]["display"]["Raw"]) == true) return (0, _util.hexToString)(identity.toHuman()["info"]["display"]["Raw"]);
-                    else return identity.toHuman()["info"]["display"]["Raw"];
-                }
-            }
-            return node_point;
-        });
-    } catch (error) {
-        console.log(error);
-    }
-}
-async function nodesCreation() {
-    api = await apiPromise;
-    nodes = await api.query.proxy.proxies.entries();
-    proxy_actions = await api.query.proxy.announcements.entries();
-    addNodePromises = [];
-    var i = 0;
-    //cy.startBatch();
-    for(nodevar in nodes)addNodePromises.push(nodePromise = async ()=>{
-        const node = nodevar;
-        const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
-        const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
-        const id = await checkID(node_point);
-        console.log("here");
-        //Adding node points    
-        cy.add([
-            {
-                group: "nodes",
-                data: {
-                    id: id
-                },
-                position: {
-                    x: 0,
-                    y: 0
-                }
-            }, 
-        ]);
-        //And here the deleates
-        for (proxy of edges)cy.add([
-            {
-                group: "nodes",
-                data: {
-                    id: await checkID(proxy.delegate)
-                },
-                position: {
-                    x: 0,
-                    y: 0
-                }
-            }, 
-        ]);
-    } //end promise
-    );
-     //end for loop
-    await Promise.all(addNodePromises).then(()=>{
-        console.log("Nodes added");
-    //cy.endBatch();
-    }).catch(()=>{
-        console.log("Error");
-    });
-}
-async function edgeCreation() {
-    api = await apiPromise;
-    nodes = await api.query.proxy.proxies.entries();
-    proxy_actions = await api.query.proxy.announcements.entries();
-    console.log(await api.query.identity.identityOf(nodes));
-    addNodePromises = [];
-    var i = 0;
-    for(node in nodes)addNodePromises.push(nodePromise = async ()=>{
-        const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
-        const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
-        //Adding edges
-        for (proxy of edges)//console.log(await checkID(proxy.delegate));
-        cy.add([
-            {
-                group: "edges",
-                data: {
-                    id: proxy.proxyType + i++ + "\n",
-                    source: await checkID(node_point),
-                    target: await checkID(proxy.delegate)
-                }
-            }, 
-        ]);
-    } //end promise
-    );
-     //end for loop
-    await Promise.all(addNodePromises).then(()=>{
-        console.log("Edges added");
-    }).catch(()=>{
-        console.log("Error");
-    });
-}
-////////////////////////////////////MAIN FUNCTION //////////////////////////////////
-async function draw() {
-    api = await apiPromise;
-    nodes = await api.query.proxy.proxies.entries();
-    proxy_actions = await api.query.proxy.announcements.entries(); //Pending actions
-    var arrNodes = []; //Nodes
-    var arrDelegates = []; //Delegates
-    var proxyType = [];
-    var arrUsers = []; //Usernames for Nodes
-    var arrProxies = []; //Usernames for Delegates
-    for(node in nodes){
-        const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
-        const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
-        //Adding node points    
-        arrNodes.push(node_point);
-        //And here the deleates
-        let arrTemp = [];
-        for (proxy of edges){
-            arrTemp.push(proxy.delegate);
-            proxyType.push(proxy.proxyType);
-        }
-        arrDelegates.push(arrTemp); //2D array that has the same length as ArrNode. Thus each array in arrDelegatres represents the delegates of the same inedex in arrNodes
-    }
-    //Checking for usernames and placing them into arrUsers & arrProxies
-    const reg = /(^[0x])\w/g;
-    idNodes = await api.query.identity.identityOf.multi(arrNodes);
-    idDelegates = await api.query.identity.identityOf.multi(arrDelegates.flat());
-    var j = 0;
-    for (U of idNodes){
-        if (U.toHuman() != null) {
-            if (U.toHuman()["info"]["display"]["Raw"] != undefined) {
-                if (reg.test(U.toHuman()["info"]["display"]["Raw"]) == true) {
-                    arrUsers.push((0, _util.hexToString)(U.toHuman()["info"]["display"]["Raw"]));
-                    continue;
-                } else {
-                    arrUsers.push(U.toHuman()["info"]["display"]["Raw"]);
-                    continue;
-                }
-            }
-        }
-        arrUsers.push(arrNodes[j++]);
-    }
-    arrProxies = JSON.parse(JSON.stringify(arrDelegates)); //Copying arrDelegates into arrProxies
-    for(let i = 0; i < arrDelegates.length; i++)for(let j1 = 0; j1 < arrDelegates[i].length; j1++){
-        //check if there is a encoded username linked to the acocunt
-        if (idDelegates[j1].toHuman() !== null) {
-            if (idDelegates[j1].toHuman()["info"]["display"]["Raw"] !== undefined) {
-                //If yes then we test if there are emojis or not (defined by having a 0x at the start)
-                if (reg.test(idDelegates[j1].toHuman()["info"]["display"]["Raw"]) === true) arrProxies[i][j1] = (0, _util.hexToString)(idDelegates[j1].toHuman()["info"]["display"]["Raw"]);
-                else arrProxies[i][j1] = idDelegates[j1].toHuman()["info"]["display"]["Raw"];
-                 //Replace the values in arrProxies
-            }
-        }
-        if (j1 == arrDelegates[i].length - 1) for(let index = 0; index < j1; index++)idDelegates.shift();
-         //My logic is that i'm too lazy to try and do math to keep track of the postion we are in (like Array[0][1] = 2nd user Array[1][0] = 3rd) 
-    //so I'm deleting each user that has been iterated over so that in the next array idDelegates[0] will always be == to arrProxies[i][0]
-    }
-    console.log(arrNodes.length + " vs " + arrUsers.length);
-    console.log(arrDelegates.flat().length + " vs " + arrProxies.flat().length);
-    var noDupes = [
-        ...new Set(JSON.parse(JSON.stringify(arrNodes.concat(arrDelegates.flat()))))
-    ]; //New array that will contain all the users without duplicates.
-    var noDupesNamed = [
-        ...new Set(JSON.parse(JSON.stringify(arrUsers.concat(arrProxies.flat()))))
-    ]; //Same thing as noDupes but with usernames
-    console.log(noDupes);
-    console.log(noDupesNamed);
-    for(var n = 0; n < noDupes.length; n++)//Adding nodes  
-    cy.add([
-        {
-            group: "nodes",
-            data: {
-                id: noDupes[n],
-                username: noDupesNamed[n]
-            },
-            position: {
-                x: 100,
-                y: 100
-            }
-        }, 
-    ]);
-    /*
-  for (var n = 0; n < arrNodes.length; n++) {
-    //Adding node points    
-    cy.add([{
-        group: "nodes",
-        data: {
-            id: arrNodes[n],
-            username: arrUsers[n],
-        },
-        position: {
-            x: 100,
-            y: 100
-        }
-    }, ]);
-  }
-  for (var n = 0; n < arrDelegates.flat().length; n++) {
-    //Adding Delegates    
-    cy.add([{
-        group: "nodes",
-        data: {
-            id: arrDelegates.flat()[n],
-            username: arrProxies.flat()[n],
-        },
-        position: {
-            x: 100,
-            y: 100
-        }
-    }, ]);
-  }
-*/ var temp = 0; //varible to keep the id of each edge unique to each other, otherwise it wont render
-    for(var n = 0; n < arrUsers.length; n++)//Here the edges
-    for (D of arrDelegates[n]){
-        //console.log("source : " + arrUsers[n] + " delegates : " + D + " proxyType :" + proxyType[n]);
-        cy.add([
-            {
-                group: "edges",
-                data: {
-                    id: temp.toString(),
-                    label: proxyType[n],
-                    source: arrNodes[n],
-                    target: D
-                }
-            }, 
-        ]);
-        temp++;
-    }
-    /*
-  var i = 0;
-
-  for (node in nodes) {
-    const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
-    const edges = nodes[node][1][0].toHuman(); //node edges/graph connections
-
-    //Adding node points    
-    cy.add([{
-        group: "nodes",
-        data: {
-            id: await checkID(node_point)
-        },
-        position: {
-            x: 0,
-            y: 0
-        }
-    }, ]);
-
-    //And here the deleates
-    for (proxy of edges) {
-        cy.add([{
-            group: "nodes",
-            data: {
-                id: await checkID(proxy.delegate)
-            },
-            position: {
-                x: 0,
-                y: 0
-            }
-        }, ]);
-    }
-    //Here the edges
-    for (proxy of edges) {
-
-                cy.add([{
-                    group: "edges",
-                    data: {
-                        id: proxy.proxyType + i++ + "\n",
-                        source: await checkID(node_point),
-                        target: await checkID(proxy.delegate)
-                    }
-                }, ]);
-    }
-
-      }//end for loop
-
-
-  //await nodesCreation();
-  //await edgeCreation();
-
-  */ lay();
-}
+console.log("hello");
 //Layout option "cola", thanks maxkfranz. https://github.com/cytoscape/cytoscape.js-cola
+function layJ() {
+    var layout = cy.layout({
+        name: "cola",
+        animate: true,
+        refresh: 10,
+        maxSimulationTime: 6000,
+        ungrabifyWhileSimulating: true,
+        fit: true,
+        padding: 30,
+        boundingBox: {
+            x1: 0,
+            x2: 0,
+            w: cy.width(),
+            h: cy.height()
+        },
+        nodeDimensionsIncludeLabels: true,
+        // layout event callbacks
+        ready: function() {},
+        stop: function() {},
+        // positioning options
+        randomize: false,
+        avoidOverlap: true,
+        handleDisconnected: true,
+        convergenceThreshold: 0.03,
+        nodeSpacing: function(node) {
+            return 10;
+        },
+        flow: undefined,
+        alignment: undefined,
+        gapInequalities: undefined,
+        centerGraph: false,
+        // different methods of specifying edge length
+        // each can be a constant numerical value or a function like `function( edge ){ return 2; }`
+        edgeLength: function(edge) {
+            return cy.width() / 5;
+        },
+        edgeSymDiffLength: function(edge) {
+            return cy.width() / 3;
+        },
+        edgeJaccardLength: undefined,
+        // iterations of cola algorithm; uses default values on undefined
+        unconstrIter: undefined,
+        userConstIter: undefined,
+        allConstIter: undefined
+    });
+    layout.run();
+    cy.center();
+    cy.fit();
+}
 function lay() {
     var layout = cy.layout({
         name: "cola",
@@ -886,7 +650,7 @@ function lay() {
             y2: 2000
         },
         nodeDimensionsIncludeLabels: true,
-        randomize: true,
+        randomize: false,
         edgeLength: 1000,
         nodeSpacing: function(node) {
             return 50;
@@ -897,23 +661,165 @@ function lay() {
     cy.center();
     cy.fit();
 }
+/*
+cy.on("layoutstop", async (event) => {
+    await draw();
+});
+*/ //Node selection logic
+cy.on("select", "node", function(evt) {
+    const node = evt.target;
+    sidebar_display(node.data());
+});
+function sidebar_display(node_data) {
+    document.getElementById("sidebar");
+    console.log(node_data);
+// populate sidebar with node data
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------//
+function rndInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+}
+function onCirc(rad, seedAngle = null) {
+    var angle = seedAngle ? seedAngle : Math.random() * Math.PI * 2;
+    return [
+        Math.cos(angle) * rad,
+        Math.sin(angle) * rad
+    ]; //The maximum is exclusive and the minimum is inclusive
+}
+////////////////////////////////////MAIN FUNCTION //////////////////////////////////
+// refactored to be an async generator function that can be called repeatedly to add
+// or remove nodes from the graph
+var pendingIdRequests = [] // universal scope pending ids (previous round supers and manually requested)
+;
+async function draw(nodes, nodes_remove = []) {
+    const api = await apiPromise;
+    proxy_actions = await api.query.proxy.announcements.entries(); //Pending actions
+    var idRequests = pendingIdRequests;
+    pendingIdRequests = [];
+    for(const node in nodes){
+        const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
+        const delegates = nodes[node][1][0].toHuman(); //node edges/graph connections
+        if (cy.$id(node_point).length == 0) {
+            // I want node positions to be mostly deterministic so that people can
+            // look in roughly the same spot for the same thing across reloads
+            [newX, newY] = onCirc(cy.height(), seedAngle = idRequests.length);
+            cy.add({
+                group: "nodes",
+                data: {
+                    id: node_point,
+                    label: node_point
+                },
+                position: {
+                    x: newX - rndInt(50, 100),
+                    y: newY - rndInt(50, 100)
+                }
+            });
+            idRequests.push(node_point);
+        }
+        for (delegate of delegates){
+            if (cy.$id(delegate.delegate).length == 0) {
+                cy.add({
+                    group: "nodes",
+                    data: {
+                        id: delegate.delegate,
+                        label: delegate.delegate
+                    },
+                    position: {
+                        x: cy.$id(node_point).position("x") + rndInt(-100, 100),
+                        y: cy.$id(node_point).position("y") + rndInt(-100, 100)
+                    }
+                });
+                idRequests.push(delegate.delegate);
+            }
+            edgeId = delegate.delegate + node_point + delegate.proxyType;
+            if (cy.$id(edgeId).length == 0) cy.add({
+                group: "edges",
+                data: {
+                    id: edgeId,
+                    label: delegate.proxyType,
+                    source: delegate.delegate,
+                    target: node_point
+                }
+            });
+        }
+    }
+    const reg = /(^[0x][0-9a-fA-F]*)\w/g;
+    //check for pending idRequests (added to graph global data in cy.on for adding nodes)
+    api.query.identity.identityOf.multi(idRequests).then(async (results)=>{
+        var superIds = await api.query.identity.superOf.multi(idRequests);
+        var output = [];
+        for (const [index, identity] of results.entries())output.push([
+            index,
+            identity,
+            superIds[index]
+        ]);
+        return output;
+    }).then(async (results)=>{
+        for (const [index, identity, superIdResponse] of results){
+            if (identity.toHuman()) {
+                identityJson = identity.toHuman();
+                nametext = reg.test(identityJson["info"]["display"]["Raw"]) ? (0, _util.hexToString)(identityJson["info"]["display"]["Raw"]) : identityJson["info"]["display"]["Raw"];
+                cy.$id(idRequests[index]).data("label", nametext);
+                cy.$id(idRequests[index]).data("identity", identityJson);
+            } else {
+                superId = superIdResponse.toHuman();
+                if (superId) {
+                    var parsedSuperId = reg.test(superId[1]["Raw"]) ? (0, _util.hexToString)(superId[1]["Raw"]) : superId[1]["Raw"];
+                    if (cy.$id(superId[0])) nametext = cy.$id(superId[0]).data("label") + "/" + parsedSuperId;
+                    else {
+                        nametext = idRequests[index];
+                        cy.add({
+                            group: "nodes",
+                            data: {
+                                id: superId[0],
+                                label: superId[0]
+                            },
+                            position: {
+                                x: rndInt(0, 2000),
+                                y: rndInt(0, 2000)
+                            }
+                        });
+                        //if superId is not in graph, after we add it to graph, 
+                        //we add it to the next round for identification, 
+                        //followed by it's child
+                        pendingIdRequests.push(superId[0]);
+                        pendingIdRequests.push(idRequests[index]);
+                        cy.add({
+                            group: "edges",
+                            data: {
+                                id: idRequests[index] + superId[0] + "superidentity",
+                                label: "Super Identity",
+                                source: idRequests[index],
+                                target: superId[0]
+                            }
+                        });
+                    }
+                } else nametext = idRequests[index];
+            }
+            cy.$id(idRequests[index]).data("label", nametext);
+        }
+    });
+//lay();
+}
 //Search function that uses searchbar input. Add reset of searchbar? Add choice between search for username or public address.
 async function Search() {
     const searchTerm = document.getElementById("searchTerm").value;
-    const id = await checkID(searchTerm);
-    cy.fit(cy.$("#" + searchTerm), 200);
-    /*cy.zoom({
-    level: 0.5,
-    position: cy.$('#'+ searchTerm).position()
-  });*/ console.log("search Attempt for " + searchTerm + " Found " + id);
+    const elem = cy.$("#" + searchTerm);
+    const label = elem.data("label");
+    //cy.fit(cy.$('#'+searchTerm));
+    cy.zoom({
+        level: 0.5,
+        position: elem.position()
+    });
+    console.log("search Attempt for " + searchTerm + " Found " + label);
 }
 // event listeners for functions
-const Fdraw = document.getElementById("draw");
-Fdraw.addEventListener("click", draw);
-const Fcola = document.getElementById("cola");
-Fcola.addEventListener("click", lay);
 const FsearchTerm = document.getElementById("searchButton");
-FsearchTerm.addEventListener("click", Search); /*
+FsearchTerm.addEventListener("click", Search);
+const Freset = document.getElementById("reset");
+Freset.addEventListener("click", lay); /*
 line-style : The style of the edge’s line; may be solid, dotted, or dashed.
 */  /*proxies (“delegates”) should have an indication of pending announcements they’ve made on their proxied accounts (nodes)
 Delegate actions? ie Action name + Delay
@@ -75860,8 +75766,8 @@ BRp$c.findTaxiPoints = function(edge, pairInfo) {
     var pl = isVert ? pdy : pdx;
     var sgnL = signum(pl);
     var forcedDir = false;
-    if (!(isExplicitDir && (turnIsPercent || turnIsNegative // forcing in this case would cause weird growing in the opposite direction
-    )) && (rawTaxiDir === DOWNWARD && pl < 0 || rawTaxiDir === UPWARD && pl > 0 || rawTaxiDir === LEFTWARD && pl > 0 || rawTaxiDir === RIGHTWARD && pl < 0)) {
+    if (!(isExplicitDir && (turnIsPercent || turnIsNegative) // forcing in this case would cause weird growing in the opposite direction
+    ) && (rawTaxiDir === DOWNWARD && pl < 0 || rawTaxiDir === UPWARD && pl > 0 || rawTaxiDir === LEFTWARD && pl > 0 || rawTaxiDir === RIGHTWARD && pl < 0)) {
         sgnL *= -1;
         l = sgnL * Math.abs(l);
         forcedDir = true;

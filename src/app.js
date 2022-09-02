@@ -62,46 +62,67 @@ var cy = cytoscape({
   wheelSensitivity: 0.2,
 });
 
+console.log("hello");
+//Layout option "cola", thanks maxkfranz. https://github.com/cytoscape/cytoscape.js-cola
+function layJ() {
+  var layout = cy.layout({
+    name: "cola",
+    animate: true, // whether to show the layout as it's running
+    refresh: 10, // number of ticks per frame; higher is faster but more jerky
+    maxSimulationTime: 6000, // max length in ms to run the layout
+    ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
+    fit: true, // on every layout reposition of nodes, fit the viewport
+    padding: 30, // padding around the simulation
+    boundingBox: {x1: 0, x2: 0, w: cy.width(), h: cy.height()}, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+    nodeDimensionsIncludeLabels: true, // whether labels should be included in determining the space used by a node
+  
+    // layout event callbacks
+    ready: function(){}, // on layoutready
+    stop: function(){}, // on layoutstop
+  
+    // positioning options
+    randomize: false, // use random node positions at beginning of layout
+    avoidOverlap: true, // if true, prevents overlap of node bounding boxes
+    handleDisconnected: true, // if true, avoids disconnected components from overlapping
+    convergenceThreshold: 0.03, // when the alpha value (system energy) falls below this value, the layout stops
+    nodeSpacing: function( node ){ return 10; }, // extra spacing around nodes
+    flow: undefined, // use DAG/tree flow layout if specified, e.g. { axis: 'y', minSeparation: 30 }
+    alignment: undefined, // relative alignment constraints on nodes, e.g. {vertical: [[{node: node1, offset: 0}, {node: node2, offset: 5}]], horizontal: [[{node: node3}, {node: node4}], [{node: node5}, {node: node6}]]}
+    gapInequalities: undefined, // list of inequality constraints for the gap between the nodes, e.g. [{"axis":"y", "left":node1, "right":node2, "gap":25}]
+    centerGraph: false, // adjusts the node positions initially to center the graph (pass false if you want to start the layout from the current position)
+  
+    // different methods of specifying edge length
+    // each can be a constant numerical value or a function like `function( edge ){ return 2; }`
+    edgeLength: function( edge ){ return cy.width()/5; }, // sets edge length directly in simulation
+    edgeSymDiffLength: function( edge ){ return cy.width()/3; }, // symmetric diff edge length in simulation
+    edgeJaccardLength: undefined, // jaccard edge length in simulation
+  
+    // iterations of cola algorithm; uses default values on undefined
+    unconstrIter: undefined, // unconstrained initial layout iterations
+    userConstIter: undefined, // initial layout iterations with user-specified constraints
+    allConstIter: undefined, // initial layout 
+  });
+  layout.run();
+  cy.center();
+  cy.fit();
+}
 
-//Layout option "elk", thanks maxkfranz. https://github.com/cytoscape/cytoscape.js-elk
-// swapped from cola due to webworker support
-const layout = cy.layout({
-  name: "cola",
-  animate: true, // whether to show the layout as it's running
-  refresh: 1, // number of ticks per frame; higher is faster but more jerky
-  maxSimulationTime: 6000, // max length in ms to run the layout
-  ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
-  fit: false, // on every layout reposition of nodes, fit the viewport
-  padding: 30, // padding around the simulation
-  boundingBox: {x1: 0, x2: 0, w: cy.width(), h: cy.height()}, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-  nodeDimensionsIncludeLabels: true, // whether labels should be included in determining the space used by a node
+function lay() {
+  var layout = cy.layout({
+    name: 'cola',
+    ungrabifyWhileSimulating: true,
+    boundingBox: { x1:0, y1:0, x2:8000, y2:2000 },
+    nodeDimensionsIncludeLabels: true,
+    randomize: false,
+    edgeLength: 1000, // sets edge length directly in simulation
+    nodeSpacing: function( node ){ return 50; },
+    maxSimulationTime: 6000,
+  });
 
-  // layout event callbacks
-  ready: function(){}, // on layoutready
-  stop: function(){}, // on layoutstop
-
-  // positioning options
-  randomize: false, // use random node positions at beginning of layout
-  avoidOverlap: true, // if true, prevents overlap of node bounding boxes
-  handleDisconnected: true, // if true, avoids disconnected components from overlapping
-  convergenceThreshold: 0.03, // when the alpha value (system energy) falls below this value, the layout stops
-  nodeSpacing: function( node ){ return 10; }, // extra spacing around nodes
-  flow: undefined, // use DAG/tree flow layout if specified, e.g. { axis: 'y', minSeparation: 30 }
-  alignment: undefined, // relative alignment constraints on nodes, e.g. {vertical: [[{node: node1, offset: 0}, {node: node2, offset: 5}]], horizontal: [[{node: node3}, {node: node4}], [{node: node5}, {node: node6}]]}
-  gapInequalities: undefined, // list of inequality constraints for the gap between the nodes, e.g. [{"axis":"y", "left":node1, "right":node2, "gap":25}]
-  centerGraph: false, // adjusts the node positions initially to center the graph (pass false if you want to start the layout from the current position)
-
-  // different methods of specifying edge length
-  // each can be a constant numerical value or a function like `function( edge ){ return 2; }`
-  edgeLength: function( edge ){ return cy.width()/5; }, // sets edge length directly in simulation
-  edgeSymDiffLength: function( edge ){ return cy.width()/3; }, // symmetric diff edge length in simulation
-  edgeJaccardLength: undefined, // jaccard edge length in simulation
-
-  // iterations of cola algorithm; uses default values on undefined
-  unconstrIter: undefined, // unconstrained initial layout iterations
-  userConstIter: undefined, // initial layout iterations with user-specified constraints
-  allConstIter: undefined, // initial layout 
-});
+  layout.run();
+  cy.center();
+  cy.fit();
+};
 
 /*
 cy.on("layoutstop", async (event) => {
@@ -143,12 +164,13 @@ async function draw(nodes, nodes_remove=[]){
   
   const api = await apiPromise;
   proxy_actions = await api.query.proxy.announcements.entries();//Pending actions
-  var idRequests = pendingIdRequests
-  pendingIdRequests = []
+  var idRequests = pendingIdRequests;
+  pendingIdRequests = [];
 
   for (const node in nodes) {
     const node_point = nodes[node][0].toHuman()[0]; //nodes in graph
     const delegates = nodes[node][1][0].toHuman(); //node edges/graph connections
+
     if(cy.$id(node_point).length == 0){
       // I want node positions to be mostly deterministic so that people can
       // look in roughly the same spot for the same thing across reloads
@@ -198,36 +220,43 @@ async function draw(nodes, nodes_remove=[]){
     }
   }
   
-  layout.run();
   const reg = /(^[0x][0-9a-fA-F]*)\w/g;
 
   //check for pending idRequests (added to graph global data in cy.on for adding nodes)
   api.query.identity.identityOf.multi(idRequests).then(async (results) => {
     var superIds = await api.query.identity.superOf.multi(idRequests);
     var output = [];
+
     for(const [index, identity] of results.entries()){
       output.push([index, identity, superIds[index]])
     }
+
     return output;
   }).then(async (results) => {
+
     for (const [index, identity, superIdResponse] of results) {
+
       if(identity.toHuman()){
         identityJson = identity.toHuman();
         nametext = 
           reg.test(identityJson["info"]["display"]["Raw"])?
           hexToString(identityJson["info"]["display"]["Raw"]):
           identityJson["info"]["display"]["Raw"];
+
         cy.$id(idRequests[index]).data("label", nametext);
         cy.$id(idRequests[index]).data("identity", identityJson);
       } else {
+
         superId = superIdResponse.toHuman();
         if(superId){
           var parsedSuperId = 
             reg.test(superId[1]["Raw"])?
             hexToString(superId[1]["Raw"]):
             superId[1]["Raw"];
+
           if(cy.$id(superId[0])){
             nametext = cy.$id(superId[0]).data("label")+"/"+parsedSuperId;
+
           } else {
             nametext = idRequests[index];
             cy.add(
@@ -265,7 +294,8 @@ async function draw(nodes, nodes_remove=[]){
         cy.$id(idRequests[index]).data("label", nametext);
     }
   });
-  layout.run();
+
+  //lay();
 }
 
 //Search function that uses searchbar input. Add reset of searchbar? Add choice between search for username or public address.
@@ -285,11 +315,7 @@ async function Search() {
 const FsearchTerm = document.getElementById("searchButton");
 FsearchTerm.addEventListener("click", Search);
 const Freset = document.getElementById("reset");
-Freset.addEventListener("click", ()=>{
-  layout.run();
-  cy.center();
-  cy.fit();
-});
+Freset.addEventListener("click", lay);
 
 /*
 line-style : The style of the edge’s line; may be solid, dotted, or dashed.
