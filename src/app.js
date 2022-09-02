@@ -3,9 +3,9 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { hexToString } from '@polkadot/util';
 
 var cytoscape = require('cytoscape');
-let cola = require('cytoscape-cola');
+let fcose = require('cytoscape-fcose');
 
-cytoscape.use( cola ); // register extension
+cytoscape.use( fcose ); // register extension
 
 // Construct
 const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
@@ -45,6 +45,13 @@ var cy = cytoscape({
       }
     },
     {
+      selector: ".background",
+      style: {
+        "ghost": 'yes',
+        "opacity": 0.1
+      }
+    },
+    {
       selector: "edge",
       style: {
         width: 3,
@@ -61,7 +68,7 @@ var cy = cytoscape({
   ],
 
   layout: {
-    name: "grid",
+    name: "preset",
   },
   wheelSensitivity: 0.2,
 });
@@ -76,6 +83,10 @@ cy.on("layoutstop", async (event) => {
 cy.on("select", "node", function(evt) {
   const node = evt.target;
   const related = node.openNeighborhood();
+  const relrel = node.closedNeighborhood().closedNeighborhood();
+  const notrelrel = cy.elements().not(relrel);
+  notrelrel.addClass("background");
+  relrel.removeClass("background");
   sidebar_display(node, related);
 });
 
@@ -294,6 +305,7 @@ async function Search() {
   const searchTerm = document.getElementById("searchTerm").value;
   const elem = cy.$('#'+ searchTerm);
   const label = elem.data("label");
+  elem.select();
   //cy.fit(cy.$('#'+searchTerm));
   cy.zoom({
     level: 1.5,
@@ -305,11 +317,44 @@ async function Search() {
 // event listeners for functions
 const FsearchTerm = document.getElementById("searchButton");
 FsearchTerm.addEventListener("click", Search);
-const Freset = document.getElementById("reset");
-Freset.addEventListener("click", lay());
 
 
-function lay() {  
+function lay() { 
+  var layout = cy.layout({
+    name: 'fcose',
+    quality: "default",
+    randomize: false,
+    animate: true,
+    animationDuration: 2000,
+    ungrabifyWhileSimulating: true,
+    packComponents: false,
+    nodeRepulsion: function( node ){ 
+      const repulsionVal = 10000 / node.closedNeighborhood().size();
+      console.log(repulsionVal);
+      return repulsionVal; 
+    },
+    samplingType: true,
+    sampleSize: 10,
+    nodeSeparation: 100,
+    idealEdgeLength: function(edge){ 
+      lengthval =  500 / edge.source().closedNeighborhood().size();
+      console.log(lengthval);
+      return lengthval;
+    },
+    edgeElasticity: edge => 0.4,
+    gravity: 0.05,
+    gravityRange: 3,
+    boundingBox: { x1:0, y1:0, w:cy.width(), h:cy.height() },
+    nodeDimensionsIncludeLabels: true,
+    // Maximum number of iterations to perform - this is a suggested value and might be adjusted by the algorithm as required
+    numIter: 6500,
+    // For enabling tiling
+    tile: false,
+    // Initial cooling factor for incremental layout  
+    initialEnergyOnIncremental: 0.4,
+  });
+
+  layout.run(); 
   cy.fit();
   cy.center();
 };
