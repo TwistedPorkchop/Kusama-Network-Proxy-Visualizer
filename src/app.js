@@ -212,6 +212,7 @@ async function draw(nodes, nodes_remove=[]){
           label: delegate.proxyType,
           source: delegate.delegate,
           target: node_point,
+          delay: delegate.delay,
           color: procColor(index)
         },
       });
@@ -239,12 +240,13 @@ async function draw(nodes, nodes_remove=[]){
         cy.$id(idRequests[index]).data("identity", identityJson);
       } else {
         superId = superIdResponse.toHuman();
+        console.log(superId);
         if(superId){
           var parsedSuperId = 
             reg.test(superId[1]["Raw"])?
             hexToString(superId[1]["Raw"]):
             superId[1]["Raw"];
-          if(!cy.$id(superId[0])){
+          if(!cy.$id(superId[0]).length == 0){
             nametext = cy.$id(superId[0]).data("label")+"/"+parsedSuperId;
             superEdgeId = idRequests[index]+superId[0]+"superidentity";
             existingNode = cy.$id(superEdgeId);
@@ -360,6 +362,8 @@ function lay() {
         document.getElementById("searchTerm").value = preSearch;
         preSearch = false;
         Search();
+      } else {
+        cy.$(':selected').select();
       }
     },
   });
