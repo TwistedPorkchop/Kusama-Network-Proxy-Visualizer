@@ -3,9 +3,10 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { hexToString } from '@polkadot/util';
 
 var cytoscape = require('cytoscape');
+
 let fcose = require('cytoscape-fcose');
 
-cytoscape.use( fcose ); // register extension
+cytoscape.use( fcose ); 
 
 // Construct
 const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
@@ -87,12 +88,6 @@ var cy = cytoscape({
   },
   wheelSensitivity: 0.2,
 });
-
-/*
-cy.on("layoutstop", async (event) => {
-    await draw();
-});
-*/
 
 //Node selection logic
 cy.on("select", "node", function(evt) {
