@@ -113,6 +113,8 @@ function sidebar_display(node, related){
   relatedElement = document.createElement("related");
   lastElement = document.createElement("related");
   
+  lastElement.style.float = "left";
+  
   sidebar.appendChild(accountElement);
   sidebar.appendChild(relatedElement);
   sidebar.appendChild(lastElement);
@@ -131,15 +133,21 @@ function sidebar_display(node, related){
     // are looking at by checking the first subelement.
     firstChild = element.firstElementChild
     if (firstChild.tagName == "ID"){
+      element.style.width = "inherit";
       const nodeAddress = firstChild.innerText;
       firstChild.innerText = '\n' + firstChild.innerText + '\n';
       firstChild.addEventListener("click", (evt) => {
-        cy.$id(nodeAddress).select();
+        cy.$("*").unselect();
+        const clickedNode = cy.$id(nodeAddress);
+        clickedNode.select();
+        cy.zoom({
+          level: 0.4,
+          position: clickedNode.position()
+        });
         const existingLinks = document.getElementById("links");
         linksDiv = existingLinks?existingLinks:document.createElement("div");
         linksDiv.innerHTML = "";
         linksDiv.id = "links";
-        linksDiv.style.float = "left";
         lastElement.appendChild(linksDiv);
         for (index in explorers){
           explorerLink = document.createElement("a");
@@ -358,6 +366,7 @@ async function Search() {
   const searchTerm = document.getElementById("searchTerm").value;
   const elem = cy.$('#'+ searchTerm);
   const label = elem.data("label");
+  cy.$("*").unselect();
   elem.select();
   //cy.fit(cy.$('#'+searchTerm));
   cy.zoom({
