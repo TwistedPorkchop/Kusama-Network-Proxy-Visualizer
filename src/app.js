@@ -13,8 +13,18 @@ const apiPromise = ApiPromise.create({ provider: wsProvider });
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 var preSearch = urlParams.get("s")?urlParams.get("s"):"";
-console.log(urlParams);
-
+const explorers = [
+  "https://sub.id/",
+  "https://kusama.subscan.io/account/",
+  "https://explorer.polkascan.io/kusama/account/",
+  "https://kusama.polkaholic.io/account/",
+]
+const explorerNames = [
+  "Sub.ID (Multichain)",
+  "Subscan (Kusama)",
+  "Polkascan (Kusama)",
+  "Polkaholic (Multichain)"
+]
 
 // main startup
 async function main () {
@@ -24,7 +34,6 @@ async function main () {
       return a[0].toHuman[0] - b[0].toHuman[0];
     });
     await draw(nodes);
-    console.log(preSearch);
   });
   autoannoncements = api.query.proxy.announcements.entries(async (announcements) => {
     console.log(announcements);
@@ -164,16 +173,62 @@ function sidebar_display(node, related){
   // populate sidebar with node data
   accountElement = document.createElement("account");
   relatedElement = document.createElement("related");
+  lastElement = document.createElement("related");
+  
+  lastElement.style.float = "left";
   
   sidebar.appendChild(accountElement);
   sidebar.appendChild(relatedElement);
+  sidebar.appendChild(lastElement);
 
   objectToDomElement(accountElement, node.data());
   related.map((x) => {
     if(!x.isEdge()){
         objectToDomElement(relatedElement, x.data());
       }
-    });
+  });
+  const allElements = document.getElementsByTagName("object");
+  for (let i = 0; i < allElements.length; i++){
+    const element = allElements.item(i);
+    // each object should either represent an account/node OR
+    // an "additional" identity value - we determine which we 
+    // are looking at by checking the first subelement.
+    firstChild = element.firstElementChild
+    if (firstChild.tagName == "ID"){
+      element.style.width = "inherit";
+      const nodeAddress = firstChild.innerText;
+      firstChild.innerText = '\n' + firstChild.innerText + '\n';
+      firstChild.addEventListener("click", (evt) => {
+        cy.$("*").unselect();
+        const clickedNode = cy.$id(nodeAddress);
+        clickedNode.select();
+        cy.zoom({
+          level: 0.4,
+          position: clickedNode.position()
+        });
+        const existingLinks = document.getElementById("links");
+        linksDiv = existingLinks?existingLinks:document.createElement("div");
+        linksDiv.innerHTML = "";
+        linksDiv.id = "links";
+        lastElement.appendChild(linksDiv);
+        for (index in explorers){
+          explorerLink = document.createElement("a");
+          explorerLink.href = explorers[index] + nodeAddress;
+          explorerLink.innerText = explorerNames[index];
+          linksDiv.appendChild(explorerLink);
+        }
+      })
+      identityElement = element.getElementsByTagName("identity").item(0);
+
+    }
+    if (firstChild.tagName == "OBJECT"){
+
+    }
+    if (firstChild.tagName == "RAW"){
+
+    }
+  };
+  
 }
 
 // recursive function translates an object into a dom tree
@@ -311,7 +366,6 @@ async function draw(nodes, nodes_remove=[]){
       } else {
 
         superId = superIdResponse.toHuman();
-        console.log(superId);
         if(superId){
           var parsedSuperId = 
             reg.test(superId[1]["Raw"])?
@@ -372,6 +426,7 @@ async function Search() {
   const searchTerm = document.getElementById("searchTerm").value;
   const elem = cy.$('#'+ searchTerm);
   const label = elem.data("label");
+  cy.$("*").unselect();
   elem.select();
   //cy.fit(cy.$('#'+searchTerm));
   cy.zoom({
