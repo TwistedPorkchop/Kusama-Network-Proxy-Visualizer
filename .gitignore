@@ -2,3 +2,4 @@
 /.parcel-cache
 /.eslintrc.js
 /dist
+package-lock.json
