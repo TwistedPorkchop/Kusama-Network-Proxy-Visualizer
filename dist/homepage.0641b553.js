@@ -546,7 +546,18 @@ const apiPromise = (0, _api.ApiPromise).create({
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 var preSearch = urlParams.get("s") ? urlParams.get("s") : "";
-console.log(urlParams);
+const explorers = [
+    "https://sub.id/",
+    "https://kusama.subscan.io/account/",
+    "https://explorer.polkascan.io/kusama/account/",
+    "https://kusama.polkaholic.io/account/", 
+];
+const explorerNames = [
+    "Sub.ID (Multichain)",
+    "Subscan (Kusama)",
+    "Polkascan (Kusama)",
+    "Polkaholic (Multichain)"
+];
 // main startup
 async function main() {
     api = await apiPromise;
@@ -555,7 +566,6 @@ async function main() {
             return a[0].toHuman[0] - b[0].toHuman[0];
         });
         await draw(nodes);
-        console.log(preSearch);
     });
     autoannoncements = api.query.proxy.announcements.entries(async (announcements)=>{
         console.log(announcements);
@@ -625,12 +635,44 @@ function sidebar_display(node, related) {
     // populate sidebar with node data
     accountElement = document.createElement("account");
     relatedElement = document.createElement("related");
+    lastElement = document.createElement("related");
     sidebar.appendChild(accountElement);
     sidebar.appendChild(relatedElement);
+    sidebar.appendChild(lastElement);
     objectToDomElement(accountElement, node.data());
     related.map((x)=>{
         if (!x.isEdge()) objectToDomElement(relatedElement, x.data());
     });
+    const allElements = document.getElementsByTagName("object");
+    for(let i = 0; i < allElements.length; i++){
+        const element1 = allElements.item(i);
+        // each object should either represent an account/node OR
+        // an "additional" identity value - we determine which we 
+        // are looking at by checking the first subelement.
+        firstChild = element1.firstElementChild;
+        if (firstChild.tagName == "ID") {
+            const nodeAddress = firstChild.innerText;
+            firstChild.innerText = "\n" + firstChild.innerText + "\n";
+            firstChild.addEventListener("click", (evt)=>{
+                cy.$id(nodeAddress).select();
+                const existingLinks = document.getElementById("links");
+                linksDiv = existingLinks ? existingLinks : document.createElement("div");
+                linksDiv.innerHTML = "";
+                linksDiv.id = "links";
+                linksDiv.style.float = "left";
+                lastElement.appendChild(linksDiv);
+                for(index in explorers){
+                    explorerLink = document.createElement("a");
+                    explorerLink.href = explorers[index] + nodeAddress;
+                    explorerLink.innerText = explorerNames[index];
+                    linksDiv.appendChild(explorerLink);
+                }
+            });
+            identityElement = element1.getElementsByTagName("identity").item(0);
+        }
+        firstChild.tagName;
+        firstChild.tagName;
+    }
 }
 // recursive function translates an object into a dom tree
 // { key: "value" } == "<key>value</key>"
@@ -725,41 +767,40 @@ async function draw(nodes, nodes_remove = []) {
     api1.query.identity.identityOf.multi(idRequests).then(async (results)=>{
         var superIds = await api1.query.identity.superOf.multi(idRequests);
         var output = [];
-        for (const [index1, identity] of results.entries())output.push([
-            index1,
+        for (const [index, identity] of results.entries())output.push([
+            index,
             identity,
-            superIds[index1]
+            superIds[index]
         ]);
         return output;
     }).then(async (results)=>{
-        for (const [index1, identity, superIdResponse] of results){
+        for (const [index, identity, superIdResponse] of results){
             if (identity.toHuman()) {
                 identityJson = identity.toHuman();
                 nametext = reg.test(identityJson["info"]["display"]["Raw"]) ? (0, _util.hexToString)(identityJson["info"]["display"]["Raw"]) : identityJson["info"]["display"]["Raw"];
-                cy.$id(idRequests[index1]).data("label", nametext);
-                cy.$id(idRequests[index1]).data("identity", identityJson);
+                cy.$id(idRequests[index]).data("label", nametext);
+                cy.$id(idRequests[index]).data("identity", identityJson);
             } else {
                 superId = superIdResponse.toHuman();
-                console.log(superId);
                 if (superId) {
                     var parsedSuperId = reg.test(superId[1]["Raw"]) ? (0, _util.hexToString)(superId[1]["Raw"]) : superId[1]["Raw"];
                     if (!cy.$id(superId[0]).length == 0) {
                         nametext = cy.$id(superId[0]).data("label") + "/" + parsedSuperId;
-                        superEdgeId = idRequests[index1] + superId[0] + "superidentity";
+                        superEdgeId = idRequests[index] + superId[0] + "superidentity";
                         existingNode = cy.$id(superEdgeId);
                         if (existingNode.length == 0) cy.add({
                             group: "edges",
                             data: {
                                 id: superEdgeId,
                                 label: "Super Identity",
-                                source: idRequests[index1],
+                                source: idRequests[index],
                                 target: superId[0],
-                                color: procColor(index1)
+                                color: procColor(index)
                             }
                         });
                     } else {
-                        nametext = idRequests[index1];
-                        [newX, newY] = onCirc(seedAngle = index1);
+                        nametext = idRequests[index];
+                        [newX, newY] = onCirc(seedAngle = index);
                         cy.add([
                             {
                                 group: "nodes",
@@ -768,8 +809,8 @@ async function draw(nodes, nodes_remove = []) {
                                     label: superId[0]
                                 },
                                 position: {
-                                    x: cy.$id(idRequests[index1]).position("x") + newX * (cy.width() / 4 + index1),
-                                    y: cy.$id(idRequests[index1]).position("y") + newY * (cy.height() / 4 + index1)
+                                    x: cy.$id(idRequests[index]).position("x") + newX * (cy.width() / 4 + index),
+                                    y: cy.$id(idRequests[index]).position("y") + newY * (cy.height() / 4 + index)
                                 }
                             }
                         ]);
@@ -777,24 +818,24 @@ async function draw(nodes, nodes_remove = []) {
                         //we add it to the next round for identification, 
                         //followed by it's child
                         pendingIdRequests.push(superId[0]);
-                        pendingIdRequests.push(idRequests[index1]);
+                        pendingIdRequests.push(idRequests[index]);
                         // add edge to superID
-                        superEdgeId = idRequests[index1] + superId[0] + "superidentity";
+                        superEdgeId = idRequests[index] + superId[0] + "superidentity";
                         existingNode = cy.$id(superEdgeId);
                         if (existingNode.length == 0) cy.add({
                             group: "edges",
                             data: {
-                                id: idRequests[index1] + superId[0] + "superidentity",
+                                id: idRequests[index] + superId[0] + "superidentity",
                                 label: "Super Identity",
-                                source: idRequests[index1],
+                                source: idRequests[index],
                                 target: superId[0],
-                                color: procColor(index1)
+                                color: procColor(index)
                             }
                         });
                     }
-                } else nametext = idRequests[index1];
+                } else nametext = idRequests[index];
             }
-            cy.$id(idRequests[index1]).data("label", nametext);
+            cy.$id(idRequests[index]).data("label", nametext);
         }
     });
     cy.endBatch();
