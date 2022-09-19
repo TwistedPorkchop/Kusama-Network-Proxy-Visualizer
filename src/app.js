@@ -4,9 +4,9 @@ import { hexToString } from '@polkadot/util';
 
 var cytoscape = require('cytoscape');
 
-let fcose = require('cytoscape-fcose');
+//let fcose = require('cytoscape-fcose');
 
-cytoscape.use( fcose ); 
+//cytoscape.use( fcose ); 
 
 // Construct
 const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
@@ -352,6 +352,7 @@ async function draw(nodes, nodes_remove=[]){
     }
   });
   cy.endBatch();
+  cy.fit();
   //console.log("executing layout");
   lay();
 }
@@ -361,13 +362,27 @@ async function Search() {
   const searchTerm = document.getElementById("searchTerm").value;
   const elem = cy.$('#'+ searchTerm);
   const label = elem.data("label");
-  cy.$("*").unselect();
-  elem.select();
-  //cy.fit(cy.$('#'+searchTerm));
-  cy.zoom({
-    level: 1.5,
-    position: elem.position()
-  });
+  
+
+  cy.animate({
+    fit: {
+
+    },
+   }, {
+      duration: 1000
+  }).delay(300);
+
+  var posX = elem.position('x');
+  var posY = elem.position('y');
+  cy.animate({
+    panBy: {
+      x: posX, 
+      y: posY,
+    },
+    zoom: 2,
+   }, {
+      duration: 1000
+  })
   console.log("search Attempt for " + searchTerm + " Found " + label );
 }
 
