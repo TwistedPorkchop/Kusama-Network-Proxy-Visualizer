@@ -362,28 +362,30 @@ async function Search() {
   const searchTerm = document.getElementById("searchTerm").value;
   const elem = cy.$('#'+ searchTerm);
   const label = elem.data("label");
-  
+  var pos = elem.position();
 
   cy.animate({
-    fit: {
-
-    },
+    fit: {    },
+    easing: "ease-out",
    }, {
-      duration: 1000
-  }).delay(300);
+      duration: 2000
+  });
 
-  var posX = elem.position('x');
-  var posY = elem.position('y');
   cy.animate({
-    panBy: {
-      x: posX, 
-      y: posY,
+    zoom:{
+     level: 2,
+     position: pos
     },
-    zoom: 2,
+    easing: "ease-in",
+    fit:{
+      eles: elem,
+    }
    }, {
-      duration: 1000
-  })
+      duration: 1500
+  });
+
   console.log("search Attempt for " + searchTerm + " Found " + label );
+
 }
 
 // event listeners for functions
