@@ -3,10 +3,9 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { hexToString } from '@polkadot/util';
 
 var cytoscape = require('cytoscape');
+var spread = require('cytoscape-spread');
 
-//let fcose = require('cytoscape-fcose');
-
-//cytoscape.use( fcose ); 
+spread( cytoscape ); // register extension
 
 // Construct
 const wsProvider = new WsProvider('wss://kusama-rpc.polkadot.io');
@@ -97,6 +96,7 @@ cy.on("select", "node", function(evt) {
   const notrelrel = cy.elements().not(relrel);
   notrelrel.addClass("background");
   relrel.removeClass("background");
+  //document.getElementById("sidebar").setAttribute("class","clicked");
   sidebar_display(node, related);
 });
 
@@ -391,48 +391,28 @@ async function Search() {
 // event listeners for functions
 const FsearchTerm = document.getElementById("searchButton");
 FsearchTerm.addEventListener("click", Search);
+const Lay = document.getElementById("Nav");
+Lay.addEventListener("click", lay);
 
 
 function lay() { 
   var layout = cy.layout({
-    name: 'fcose',
-    quality: "default",
-    randomize: false,
-    animate: true,
-    animationDuration: 2000,
-    ungrabifyWhileSimulating: true,
-    packComponents: false,
-    nodeRepulsion: function( node ){ 
-      const repulsionVal = 10000 / node.closedNeighborhood().size();
-      return repulsionVal; 
-    },
-    samplingType: true,
-    sampleSize: 10,
-    nodeSeparation: 100,
-    idealEdgeLength: function(edge){ 
-      lengthval =  500 / edge.source().closedNeighborhood().size();
-      return lengthval;
-    },
-    edgeElasticity: edge => 0.4,
-    gravity: 0.05,
-    gravityRange: 3,
-    boundingBox: { x1:0, y1:0, w:cy.width(), h:cy.height() },
-    nodeDimensionsIncludeLabels: true,
-    // Maximum number of iterations to perform - this is a suggested value and might be adjusted by the algorithm as required
-    numIter: 6500,
-    // For enabling tiling
-    tile: false,
-    // Initial cooling factor for incremental layout  
-    initialEnergyOnIncremental: 0.4,
-    stop: () => {
-      if(preSearch){
-        document.getElementById("searchTerm").value = preSearch;
-        preSearch = false;
-        Search();
-      } else {
-        cy.$(':selected').select();
-      }
-    },
+    name: "spread",
+    animate: false, // Whether to show the layout as it's running
+    ready: undefined, // Callback on layoutready
+    stop: undefined, // Callback on layoutstop
+    fit: false, // Reset viewport to fit default simulationBounds
+    minDist: 20, // Minimum distance between nodes
+    padding: 20, // Padding
+    expandingFactor: -1.0, // If the network does not satisfy the minDist
+    // criterium then it expands the network of this amount
+    // If it is set to -1.0 the amount of expansion is automatically
+    // calculated based on the minDist, the aspect ratio and the
+    // number of nodes
+    prelayout: { name: 'cose' }, // Layout options for the first phase
+    maxExpandIterations: 4, // Maximum number of expanding iterations
+    boundingBox: undefined, // Constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+    randomize: false // Uses random initial node positions on true
   });
 
   layout.run(); 

@@ -35,14 +35,26 @@ footer{
 aside{
     background-color: #c831ff8f;
     box-shadow: 0 0 15px #110042;
-    width: 8vw;
-    height: 80vh;
+    width: 100%;
+    height: 5vh;
     border: 15px;
-    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
     margin-right: 10px;
     border-radius: 30px;
     z-index: 3;
     transition: 1s;
+    position: absolute;
+    top: 60px;
+    overflow: hidden;
+}
+.unClicked{
+    width: 100%;
+    height: 5vh;
+}
+.clicked{
+    width: 100%;
+    height: min-content;
 }
 aside:hover{
     /*un trasparent on hover*/
@@ -93,7 +105,7 @@ input:focus {
 
 section{
     background-color: rgba(0, 0, 0, 0);
-    width: max-content;
+    width: 100%;
     border: 5px;
 	padding: 5px;
     border-radius: 5px;
@@ -148,7 +160,7 @@ div{
 }
 
 #cy {
-    height: 80vh;
-    width: 85vw;
+    height: max-content;
+    width: max-content;
     background-color: rgba(255, 255, 255, 0);
   }
